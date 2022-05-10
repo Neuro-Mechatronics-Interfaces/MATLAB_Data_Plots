@@ -130,6 +130,8 @@ switch pars.EMG_Type
         fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
     case 'Bipolar'
         fig = plot.emg_averages__bipolar(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
+    case 'Accelerometer'
+        fig = plot.emg_averages__imu(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
     otherwise
         error("I have not yet set up handling for EMG_Type == <strong>%s</strong>.\n", pars.EMG_Type);
 end
