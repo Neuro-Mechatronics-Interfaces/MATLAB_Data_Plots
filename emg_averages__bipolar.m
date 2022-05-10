@@ -1,49 +1,52 @@
-function fig = plot_emg_averages__bipolar(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
-%PLOT_EMG_AVERAGES__BIPOLAR  EMG processing for bipolar TMSi channels
+function fig = emg_averages__bipolar(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
+%EMG_AVERAGES__BIPOLAR  EMG processing for bipolar TMSi channels
 %
 % Syntax:
-%   fig = plot_emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
+%   fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
 %
 % This should be accessed via `"Array"` EMG_Type parameter in
-% `plot_emg_averages`. 
+% `plot.emg_averages`. 
 %
-% See also: Contents, plot_emg_averages
+% See also: Contents, plot.emg_averages
 
+if (numel(varargin) == 1) && isstruct(varargin{1})
+    pars = varargin{1};
+else
+    pars = struct;
+    pars.Acquisition_Type = "TMSi";
+    pars.EMG_Type = "Bipolar"; % Can be: "Array" | "Bipolar"
+    pars.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
+    pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, "Rectified", 'Detrend_Polynomial_Order', 7, 'Apply_HPF', true); % Return default filtering struct
+    pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
+    pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
+    pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
+    pars.Link_Axes = true;  % Set false to allow axes limits to adaptively set independently
+    pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
+    pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
+    pars.N_Rows = nan; % Number of rows in grid layout
+    pars.N_Columns = nan; % Number of columns in grid layout
+    [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
+    pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
+    pars.Style = "Shaded"; % Can be "Shaded" | "Individual"
+    pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
+    pars.Subtract_Linear_Fit = true; % Set false to skip the linear-fit subtraction.
+    pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
+    pars.T = [-15, 80]; % Time for epochs (milliseconds)
+    pars.T_RMS = [12, 60]; % Time epoch for computing RMS
+    pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
+    pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
+    pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 
-
-pars = struct;
-pars.Acquisition_Type = "TMSi";
-pars.EMG_Type = "Bipolar"; % Can be: "Array" | "Bipolar"
-pars.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
-pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, "Rectified", 'Detrend_Polynomial_Order', 7, 'Apply_HPF', true); % Return default filtering struct
-pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
-pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
-pars.Link_Axes = true;  % Set false to allow axes limits to adaptively set independently
-pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
-pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
-pars.N_Rows = nan; % Number of rows in grid layout
-pars.N_Columns = nan; % Number of columns in grid layout
-pars.Output_Root = parameters('generated_data_folder'); % Location where output figures are saved.
-pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
-pars.Style = "Shaded"; % Can be "Shaded" | "Individual"
-pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
-pars.Subtract_Linear_Fit = true; % Set false to skip the linear-fit subtraction.
-pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-pars.T = [-15, 80]; % Time for epochs (milliseconds)
-pars.T_RMS = [12, 60]; % Time epoch for computing RMS
-pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
-pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
-pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
-
-% % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
-
-% Handle parsing of `pars`
-pars = utils.parse_parameters(pars, varargin{:});
-if ~isstruct(pars.Filtering)
-     pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+    % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
+    % Handle parsing of `pars`
+    pars = utils.parse_parameters(pars, varargin{:});
 end
 
-[x, info] = load_tmsi_raw(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+if ~isstruct(pars.Filtering)
+     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+end
+
+[x, info] = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
 if isempty(x)
     fig = gobjects(1);
     return;
@@ -78,7 +81,7 @@ if isnan(pars.Sync_Bit)
     trigs = in.offset;
     triggers = in.sync_data;
 else
-    [stops, trigs, triggers] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 
 iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
@@ -102,7 +105,7 @@ if pars.Filtering.Apply_Virtual_Reference
 else
     tmp = false;
 end
-[z, ~, pars.Filtering] = apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+[z, ~, pars.Filtering] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
 pars.Filtering.Apply_Virtual_Reference = tmp; % Revert
 if (isnan(pars.N_Rows)) || (isnan(pars.N_Columns))
     L = tiledlayout(fig, 'flow');
@@ -121,12 +124,12 @@ if isinf(pars.End_Linear_Fit)
 else
     i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit 
 end
-stim = getTMSiStimData(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
 ax = [];
 for iCh = 1:sum(iBip)
     
-    [A, X, trigs] = triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
-    T = triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
+    [A, X, trigs] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
+    T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
     if all(abs(A) < eps) % Then this channel is "empty"
         continue;
     end
@@ -148,7 +151,7 @@ for iCh = 1:sum(iBip)
         return;
     end
     set(ax, 'NextPlot', 'add', 'FontName', 'Tahoma', 'FontSize', 8, ...
-        'LineWidth', 1.25, 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src, evt), ...
+        'LineWidth', 1.25, 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src, evt), ...
         'UserData', struct('name', lab(iCh), 'filtering', pars.Filtering, 'block', block));
     if ~isempty(pars.XLim)
         xlim(ax, pars.XLim);
@@ -173,13 +176,13 @@ for iCh = 1:sum(iBip)
     end
     T(T > 0) = max(max(X));
     if pars.Plot_Stim_Period
-        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt)); 
+        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt)); 
     end
     if pars.Style == "Individual"
         plot(ax, t_sweep, X, ...
             'LineWidth', 0.5, 'Color', [0.45 0.45 0.45], ...
             'Tag', 'Dispersion', ...
-            'LineStyle', ':', 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt));
+            'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     else
         faceData = [1:(2*numel(A)), 1]; 
         xx = t_sweep(:);
@@ -195,7 +198,7 @@ for iCh = 1:sum(iBip)
             'DisplayName', '\pm1 SD');
     end
     plot(ax, t_sweep, A, 'LineWidth', 2, 'Color', 'k', ...
-        'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt), ...
+        'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt), ...
         'Tag', 'STA');  % Plot X for the individual ones
     ylabel(ax, channels(iCh).unit_name, 'FontName', 'Tahoma', 'Color', 'k');
     xlabel(ax, 'ms', 'FontName', 'Tahoma', 'Color', 'k');
@@ -206,9 +209,9 @@ for iCh = 1:sum(iBip)
         title(ax, name, 'FontName', 'Tahoma', 'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
     end
     if ax.XLim(1) >= 0
-        add_sd_threshold(ax, 6.5, t_sweep, A, 'LabelHorizontalAlignment', 'right');
+        utils.add_sd_threshold(ax, 6.5, t_sweep, A, 'LabelHorizontalAlignment', 'right');
     else
-        add_sd_threshold(ax, 6.5, t_sweep, A, 'LabelHorizontalAlignment', 'left');
+        utils.add_sd_threshold(ax, 6.5, t_sweep, A, 'LabelHorizontalAlignment', 'left');
     end
 end
 if isempty(ax)
@@ -218,13 +221,13 @@ else
     if pars.Link_Axes
         linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
     end
-    str = get_filtering_label_string(pars.Filtering);
+    str = utils.get_filtering_label_string(pars.Filtering);
     title(L, [char(strrep(block, '_', '\_')), ': ' str newline 'Stim Averages (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
         'FontName', 'Tahoma', ...
         'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
     finfo = strsplit(block, '_');
     out_folder = fullfile(pars.Output_Root, SUBJ, tank, finfo{end}, '.averages');
     out_name = fullfile(out_folder, sprintf('%s_%d_%d_Mean_Bipolar_EMG__%s', block, round(pars.T(1)), round(pars.T(2)), pars.Filtering.Name));
-    set(fig, 'WindowKeyPressFcn', @(src, evt)cb.handleCommonWindowKeyPresses(src, evt, out_name));
+    set(fig, 'WindowKeyPressFcn', @(src, evt)callback.handleCommonWindowKeyPresses(src, evt, out_name));
 end
 end

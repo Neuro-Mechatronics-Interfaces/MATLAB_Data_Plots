@@ -102,7 +102,7 @@ if (numel(BLOCK) > 1) || (numel(ARRAY) > 1) || (numel(CHANNEL) > 1)
     return;
 end
 
-[x, info] = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
 if isempty(x)
     fig = gobjects(1);
     return;
@@ -112,11 +112,10 @@ elseif numel(x) > 1
     return;
 end
 
-    
 tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
 block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
 fig = default.figure(block, 'Position', [0.1 0.1 0.8 0.8]);
-fig.UserData = struct('x', x, 'info', info, 'version', 2.0); % Associate thse data to the figure.
+fig.UserData = struct('x', x, 'version', 2.0); % Associate thse data to the figure.
 
 
 end

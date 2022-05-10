@@ -11,38 +11,42 @@ function fig = emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, va
 
 % % % % SEE PARS STRUCT BELOW % % % %
 
-pars = struct;
-pars.Acquisition_Type = "TMSi";
-pars.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
-pars.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
-pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
-pars.Filtering = get_default_filtering_pars(); % Return default filtering struct
-pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
-pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
-pars.Link_Axes = true;  % Set false to allow axes limits to adaptively set independently
-pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
-pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
-pars.Output_Root = parameters('generated_data_folder'); % Location where output figures are saved.
-pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
-pars.Style = "Shaded"; % Can be "Shaded" | "Individual"
-pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
-pars.Subtract_Linear_Fit = true; % Set false to skip the linear-fit subtraction.
-pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-pars.T = [-15, 80]; % Time for epochs (milliseconds)
-pars.T_RMS = [12, 60]; % Time epoch for computing RMS
-pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
-pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
-pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
+if (numel(varargin) == 1) && isstruct(varargin{1})
+    pars = varargin{1};
+else
+    pars = struct;
+    pars.Acquisition_Type = "TMSi";
+    pars.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
+    pars.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
+    pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
+    pars.Filtering = utils.get_default_filtering_pars(); % Return default filtering struct
+    pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
+    pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
+    pars.Link_Axes = true;  % Set false to allow axes limits to adaptively set independently
+    pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
+    pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
+    [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
+    pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
+    pars.Style = "Shaded"; % Can be "Shaded" | "Individual"
+    pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
+    pars.Subtract_Linear_Fit = true; % Set false to skip the linear-fit subtraction.
+    pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
+    pars.T = [-15, 80]; % Time for epochs (milliseconds)
+    pars.T_RMS = [12, 60]; % Time epoch for computing RMS
+    pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
+    pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
+    pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 
-% % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
+    % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
 
-% Handle parsing of `pars`
-pars = utils.parse_parameters(pars, varargin{:});
+    % Handle parsing of `pars`
+    pars = utils.parse_parameters(pars, varargin{:});
+end
 if ~isstruct(pars.Filtering)
      pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 
-x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
 if isempty(x)
     fig = gobjects(1);
     return;
@@ -74,7 +78,7 @@ if isnan(pars.Sync_Bit)
 else
     [stops, trigs, triggers] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
-[z, ~, pars.Filtering] = apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
+[z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
 
 L = tiledlayout(fig, 8, 8);
 
@@ -108,7 +112,7 @@ for ich = 1:64
         continue;
     end
     [A, X, trigs] = math.triggered_average(trigs, z(ich, :), n_pre, n_post, false, false, false);
-    T = triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
+    T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
     if pars.Subtract_Linear_Fit
         X = X'; % Transpose so columns are trials.
         X(i_start_fit:i_end_fit, :) = detrend(X(i_start_fit:i_end_fit, :), pars.Linear_Fit_Order);
@@ -130,7 +134,7 @@ for ich = 1:64
         return;
     end
     set(ax, 'NextPlot', 'add', 'FontName', 'Tahoma', 'FontSize', 8, ...
-        'LineWidth', 1.25, 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src, evt), ...
+        'LineWidth', 1.25, 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src, evt), ...
         'UserData', struct('name', lab(ich), 'filtering', pars.Filtering, 'block', block, 'data', X));
     xlabel(ax, xlab(ich), 'FontName', 'Tahoma', 'Color', 'k', 'FontSize', 9);
     ylabel(ax, ylab(ich), 'FontName', 'Tahoma', 'Color', 'k', 'FontSize', 9);
@@ -157,13 +161,13 @@ for ich = 1:64
     end
     T(T > 0) = max(max(X));
     if pars.Plot_Stim_Period
-        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt)); 
+        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt)); 
     end
     if pars.Style == "Individual"
         plot(ax, t_sweep, X, ...
             'LineWidth', 0.5, 'Color', [0.45 0.45 0.45], ...
             'Tag', 'Dispersion', ...
-            'LineStyle', ':', 'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt));
+            'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     else
         faceData = [1:(2*numel(A)), 1]; 
         xx = t_sweep(:);
@@ -179,14 +183,14 @@ for ich = 1:64
             'DisplayName', '\pm1 SD');
     end
     plot(ax, t_sweep, A, 'LineWidth', 2, 'Color', 'k', ...
-        'ButtonDownFcn', @(src, evt)cb.handleAxesClick(src.Parent, evt), ...
+        'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt), ...
         'Tag', 'STA');  % Plot X for the individual ones
     
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
 end
-str = get_filtering_label_string(pars.Filtering);
+str = utils.get_filtering_label_string(pars.Filtering);
 title(L, [char(strrep(block, '_', '\_')), ': ' str newline 'Stim Averages (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
     'FontName', 'Tahoma', ...
     'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
