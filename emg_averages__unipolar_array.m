@@ -76,7 +76,7 @@ if isnan(pars.Sync_Bit)
     trigs = in.offset;
     triggers = in.sync_data;
 else
-    [stops, trigs, triggers] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 [z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
 
