@@ -5,7 +5,7 @@ function fig = emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, va
 %   fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin);
 %
 % This should be accessed via `"Array"` EMG_Type parameter in
-% `plot.emg_averages`. 
+% `plot.emg_averages`.
 %
 % See also: Contents, plot.emg_averages
 
@@ -31,6 +31,8 @@ else
     pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
     pars.Subtract_Linear_Fit = true; % Set false to skip the linear-fit subtraction.
     pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
+    pars.Use_Artifact_Sync = false;
+    pars.artifact_sync_rule = 'max_rms'; % Synb_Bit alternative, choose the channel which has the greatest rms with likely stim artifact ( 'max_rms' | channel_number )
     pars.T = [-15, 80]; % Time for epochs (milliseconds)
     pars.T_RMS = [12, 60]; % Time epoch for computing RMS
     pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
@@ -43,7 +45,7 @@ else
     pars = utils.parse_parameters(pars, varargin{:});
 end
 if ~isstruct(pars.Filtering)
-     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+    pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 
 x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
@@ -66,17 +68,21 @@ fig = default.figure(block, 'Position', [0.1 0.1 0.8 0.8]);
 fig.UserData = struct('x', x, 'version', 2.0); % Associate thse data to the figure.
 % Get trigger channel
 channels = horzcat(x.channels{:});
-if isnan(pars.Sync_Bit)
-    sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
-    if exist(sync_data_in_file, 'file')==0
-        error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
-    end
-    in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
-    stops = in.onset;
-    trigs = in.offset;
-    triggers = in.sync_data;
+if pars.Use_Artifact_Sync == true
+    [stops, trigs, triggers] = utils.parse_artifact_sync(x, pars.Artifact_Sync_Rule, gen_data_folder, pars.Inverted_Logic);
 else
-    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+    if isnan(pars.Sync_Bit)
+        sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
+        if exist(sync_data_in_file, 'file')==0
+            error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
+        end
+        in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
+        stops = in.onset;
+        trigs = in.offset;
+        triggers = in.sync_data;
+    else
+        [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+    end
 end
 [z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
 
@@ -102,7 +108,7 @@ i_start_fit = find(t_sweep >= pars.Start_Linear_Fit, 1, 'first'); % Sample index
 if isinf(pars.End_Linear_Fit)
     i_end_fit = numel(t_sweep);
 else
-    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit 
+    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit
 end
 noise_bandwidth = 1e-6; % Compute noise bandwidth
 
@@ -123,13 +129,13 @@ for ich = 1:64
         A = mean(X, 1);
     end
     if pars.Filtering.Apply_Max_Rescale
-        X = X./max(max(abs(X))); 
+        X = X./max(max(abs(X)));
         A = mean(X, 1);
     end
-    
+
     if size(X, 2) ~= numel(t_sweep)
         warning('Timing mismatch - block skipped.');
-        delete(fig); 
+        delete(fig);
         fig = gobjects(1);
         return;
     end
@@ -153,15 +159,15 @@ for ich = 1:64
     end
     if pars.Style == "Individual"
         if size(X, 1) > pars.N_Individual_Max
-             X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
-             if ich == 1 % Only mention this one time.
+            X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
+            if ich == 1 % Only mention this one time.
                 fprintf(1, '\t->\tSuperimposing %d individual traces...\n', pars.N_Individual_Max);
-             end
-        end 
+            end
+        end
     end
     T(T > 0) = max(max(X));
     if pars.Plot_Stim_Period
-        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt)); 
+        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     end
     if pars.Style == "Individual"
         plot(ax, t_sweep, X, ...
@@ -169,7 +175,7 @@ for ich = 1:64
             'Tag', 'Dispersion', ...
             'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     else
-        faceData = [1:(2*numel(A)), 1]; 
+        faceData = [1:(2*numel(A)), 1];
         xx = t_sweep(:);
         xx = [xx; flipud(xx)]; %#ok<AGROW>
         yy = A(:);
@@ -185,7 +191,7 @@ for ich = 1:64
     plot(ax, t_sweep, A, 'LineWidth', 2, 'Color', 'k', ...
         'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt), ...
         'Tag', 'STA');  % Plot X for the individual ones
-    
+
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.

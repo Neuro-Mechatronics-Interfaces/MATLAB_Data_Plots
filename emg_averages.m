@@ -87,6 +87,8 @@ else
     pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
     pars.Subtract_Linear_Fit = false; % Set false to skip the linear-fit subtraction.
     pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
+    pars.Use_Artifact_Sync = false;
+    pars.Artifact_Sync_Rule = 'Mean'; % Synb_Bit alternative, choose the channel which has the greatest rms with likely stim artifact ( 'max_rms' | channel_number )
     pars.T = [-15, 80]; % Time for epochs (milliseconds)
     pars.T_RMS = [12, 60]; % Time epoch for computing RMS
     pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel

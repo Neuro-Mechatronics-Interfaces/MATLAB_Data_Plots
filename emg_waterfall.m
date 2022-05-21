@@ -32,18 +32,22 @@ else
     pars.Acquisition_Type = "TMSi";
     pars.Align_Peaks = false;
     pars.Axes = [];
-    pars.Colormap = 'spring';
+    pars.Colormap = 'jet';%'spring';
     pars.Data_Channel = nan;
     pars.EMG_Filters_Applied = false;
     pars.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
     pars.Figure_Title = 'Waterfall';
     pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
     pars.Filtering = get_default_filtering_pars("TMSi","Array","Raw", ...
-        'Apply_Virtual_Reference',false,"Apply_HPF",true,"HPF_Cutoff_Frequency",30); % Return default filtering struct
+        'Apply_Virtual_Reference',false, ...
+        "Apply_HPF",false, ...
+        "HPF_Cutoff_Frequency",100, ...
+        "Apply-Polynomial_Detrend",true,...
+        "Apply_Max_Rescale",false); % Return default filtering struct
     pars.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
     pars.Inverted_Logic = false;
-    pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
-    pars.N_Trials = 10;
+    pars.N_Individual_Max = 10; % Number of individual traces to superimpose
+    pars.N_Trials = 100;
     [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder');
     pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
     pars.Sample_Rate = 4000;    % Sample rate from acquisition
@@ -51,8 +55,8 @@ else
     pars.T = [-15, 80];     % Time for epochs (milliseconds)
     pars.T_RMS = [30, 60];  % Time epoch for computing RMS
     pars.Trigger_Data = [];
-    pars.Trigger_Channel = 'TRIGGER';
-    pars.View = [95, 65]; 
+    pars.Trigger_Channel = 'TRIGGERS';
+    pars.View = [90, 85]; 
 
     % % % Color limits as well as axes limits % % %
     pars.C_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
@@ -118,44 +122,28 @@ if isempty(pars.Trigger_Data)
     tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
     block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
     gen_data_folder = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
+    sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
 else
     block = x.name;
 end
 
-% Get trigger channel
-channels = horzcat(x.channels{:});
-if isempty(pars.Trigger_Data)
+if exist(sync_data_in_file, 'file')==0
     if isnan(pars.Sync_Bit)
-        sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
-        if exist(sync_data_in_file, 'file')==0
-            error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
-        end
-        in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
-        stops = in.onset;
-        trigs = in.offset;
-    else
-        [stops, trigs, ~] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+        error('No sync data file (<strong>%s</strong>): please run `parse_bit_sync` first! (or, set Sync_Bit to non-NaN value)', sync_data_in_file);
     end
+    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Trigger_Channel);
+    %[~, trigs] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder);
+else
+    in = load(sync_data_in_file, 'offset', 'onset','sync_data');
+    trigs = in.offset;
+    stops = in.onset;
+    triggers = in.sync_data;
 end
 
-if strcmpi(pars.EMG_Type, 'Bipolar')
-    iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
-    if sum(iBip) == 0
-        fprintf(1, 'No BIPOLAR channels for recording: <strong>%s</strong>\n', block);
-        return;
-    else
-        channels = channels(iBip);
-    end
-    data = data_in(iBip, :)';
-else
-    data = data_in;
-end
+% % Get trigger channel
+channels = horzcat(x.channels{:});
 
-if pars.EMG_Filters_Applied==true
-    z = data;
-else
-    [z, ~, pars.Filtering] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
-end
+[z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
 
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
 n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then samples
@@ -213,10 +201,14 @@ if isempty(pars.Axes)
     y = 30; % Screen position
     width = 700; % Width of figure
     height = 700; % Height of figure (by default in pixels)
-    fig = figure('Position', [x y width height], 'Color', 'w');
+    fig = figure( 'Name','Waterfall Plot',...
+             'Units','Normalized', ...
+             'Position',[0.1 0.1 0.8 0.8],...
+             'Color', 'w');
     ax = axes(fig, 'NextPlot', 'add', ...
         'XColor', 'k', 'YColor', 'k', 'ZColor', 'k', ...
         'LineWidth', 1.35, 'View', pars.View);
+
 else
     fig = pars.Axes.Parent;
     if ~isa(fig, 'matlab.ui.Figure')
@@ -268,6 +260,8 @@ if isa(fig, 'matlab.graphics.GraphicsPlaceholder')
 end
 
 if nargout < 1
+    % Second directory saves plots to folders separated by block, that way
+    % the "../Figures/Waterfall/.." directory doesn't get cluttered
     tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
     block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
     out_folder = fullfile(pars.Output_Root, SUBJ, tank, 'figures', 'Waterfall', pars.Filtering.Name);
@@ -276,8 +270,8 @@ if nargout < 1
             mkdir(out_folder);
         end
     end
-    out_name = fullfile(out_folder, sprintf('%s_%d_%d_Ch%d', block, round(pars.T(1)), round(pars.T(2)), pars.Data_Channel));
-    default.savefig(fig, out_name, sprintf("Waterfall_EMG"), true);
+    out_name = fullfile(out_folder, sprintf('%s_%d_%d_', block, round(pars.T(1)), round(pars.T(2))));
+    %default.savefig(fig, out_name, sprintf("Waterfall_EMG_%s_%s", string(chan_name), pars.Filtering.Name), true);
     
     out_folder_2 = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
     if exist(out_folder_2, 'dir') == 0
@@ -285,9 +279,8 @@ if nargout < 1
             mkdir(out_folder_2);
         end
     end
-    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_Waterfall_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false); 
+    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_Waterfall_EMG_%s_%s', round(pars.T(1)), round(pars.T(2)), string(chan_name), pars.Filtering.Name), false); 
 end
-
 
 end
 
