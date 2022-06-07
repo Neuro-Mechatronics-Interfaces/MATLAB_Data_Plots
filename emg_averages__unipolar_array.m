@@ -189,6 +189,8 @@ for ich = 1:64
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
+else
+    linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
 str = utils.get_filtering_label_string(pars.Filtering);
 title(L, [char(strrep(block, '_', '\_')), ': ' str newline 'Stim Averages (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
