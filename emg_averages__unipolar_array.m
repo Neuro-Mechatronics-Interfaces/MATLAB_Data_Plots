@@ -168,6 +168,9 @@ for ich = 1:64
             'LineWidth', 0.5, 'Color', [0.45 0.45 0.45], ...
             'Tag', 'Dispersion', ...
             'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
+        if isempty(pars.YLim)
+            ylim(ax, [min(X(:, t_sweep > 12.5), [], 'all'), max(X(:, t_sweep > 12.5), [], 'all')]); 
+        end
     else
         faceData = [1:(2*numel(A)), 1]; 
         xx = t_sweep(:);

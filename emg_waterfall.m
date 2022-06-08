@@ -148,7 +148,8 @@ if strcmpi(pars.EMG_Type, 'Bipolar')
     end
     data = data_in(iBip, :)';
 else
-    data = data_in;
+    iUnip = contains({channels.alternative_name}, 'UNI');
+    data = data_in(iUnip, :)';
 end
 
 if pars.EMG_Filters_Applied==true
@@ -226,7 +227,8 @@ else
     set(ax, 'NextPlot', 'add', 'View', pars.View, 'XDir', 'reverse');
 end
 p = waterfall(ax, trials, times, X);
-set(p, 'LineWidth', 1.5, 'FaceAlpha', 0.05, 'EdgeAlpha', 0.75);
+set(p, 'LineWidth', 1.5, 'FaceAlpha', 0.05, 'EdgeAlpha', 0.25);
+colorbar(ax);
 axis tight;
 if ~isempty(pars.X_Lim)
     xlim(ax, pars.X_Lim);
@@ -285,7 +287,7 @@ if nargout < 1
             mkdir(out_folder_2);
         end
     end
-    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_Waterfall_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false); 
+    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_Waterfall_%s-%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false); 
 end
 
 
