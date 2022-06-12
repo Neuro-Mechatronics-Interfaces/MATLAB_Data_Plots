@@ -49,25 +49,12 @@ function fig = emg_rms(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 % See also: Contents, io.load_tmsi
 
 % % % % SEE PARS STRUCT BELOW % % % %
-
-pars = struct;
-pars.Acquisition_Type = "TMSi";
-pars.EMG_Type = "RMS"; % Can be: "Array" | "Bipolar" | "RMS"
-pars.Debug = false;
-pars.File_Type = ".mat"; % Can be ".mat" | ".poly5"
-pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, "Rectified"); % Return default filtering struct
-pars.Axes = [];
-[pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
-pars.Pre_Stimulus_RMS_ms = -2.5; % Number of milliseconds relative to stimulus that is the latest the pre-stimulus window goes.
-pars.Post_Stimulus_RMS_ms = 7.5; % Number of milliseconds after stimulus before computing RMS window
-pars.RMS_Response_Ratio_Threshold = []; % Minimum amount to consider putting channel name on contour map
-pars.RMS_Max_Response_Ratio = []; % Clip color scale above this value.
-pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-pars.T = [-17.5, 22.5]; % Time for epochs (milliseconds)
-pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
-pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
-pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
-pars.CLim = []; % If empty, use autoscale, otherwise, fixed scale
+if isstruct(varargin{1})
+    pars = varargin{1};
+    varargin(1) = [];
+else
+    pars = parameters('emg_rms'); 
+end
 % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
 
 % Handle parsing of `pars`
@@ -326,12 +313,18 @@ if ~isempty(idx)
 end
 cbar = colorbar(ax);
 cbar.Label.String = 'RMS_p_o_s_t/RMS_p_r_e';
-cbar.Ticks = [clim_min, pars.RMS_Response_Ratio_Threshold, RMS_Max_Response_Ratio];
-cbar.Ticks = [clim_min, pars.RMS_Response_Ratio_Threshold, floor(RMS_Max_Response_Ratio)];
-cbar.TickLabels = [...
-    string(sprintf('\\color{black}%3.2f', clim_min)), ...
-    string(sprintf('\\color{red}%3.2f', pars.RMS_Response_Ratio_Threshold)), ...
-    string(sprintf('\\color{black}%3.2f', RMS_Max_Response_Ratio))];
+if (RMS_Max_Response_Ratio > pars.RMS_Response_Ratio_Threshold) && (clim_min < pars.RMS_Response_Ratio_Threshold)
+    cbar.Ticks = [clim_min, pars.RMS_Response_Ratio_Threshold, RMS_Max_Response_Ratio];
+    cbar.TickLabels = [...
+        string(sprintf('\\color{black}%3.2f', clim_min)), ...
+        string(sprintf('\\color{red}%3.2f', pars.RMS_Response_Ratio_Threshold)), ...
+        string(sprintf('\\color{black}%3.2f', RMS_Max_Response_Ratio))];
+else
+    cbar.Ticks = [clim_min, RMS_Max_Response_Ratio];
+    cbar.TickLabels = [...
+        string(sprintf('\\color{black}%3.2f', clim_min)), ...
+        string(sprintf('\\color{black}%3.2f', RMS_Max_Response_Ratio))];
+end
 if nargout < 1
     tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
     block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)

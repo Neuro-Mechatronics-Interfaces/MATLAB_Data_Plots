@@ -65,39 +65,13 @@ if ~isnumeric(BLOCK)
 end
 
 % % % % SEE PARS STRUCT BELOW % % % %
-if (numel(varargin) == 1) && isstruct(varargin{1})
+if isstruct(varargin{1})
     pars = varargin{1};
+    varargin(1) = [];
 else
-    pars = struct;
-    pars.Acquisition_Type = "TMSi";
-    pars.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
-    pars.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
-    pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, "Rectified", 'Polynomial_Detrend_Order', 7); % Return default filtering struct
-    pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
-    pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
-    pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
-    pars.Link_Axes = false;  % Set false to al axes limits to adaptively set independently
-    pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
-    pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
-    pars.N_Rows = nan; % Number of rows in grid layout
-    pars.N_Columns = nan; % Number of columns in grid layout
-    [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
-    pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
-    pars.Style = "Shaded"; % Can be: "Shaded" | "Individual"
-    pars.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
-    pars.Subtract_Linear_Fit = false; % Set false to skip the linear-fit subtraction.
-    pars.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-    pars.T = [-15, 80]; % Time for epochs (milliseconds)
-    pars.T_RMS = [12, 60]; % Time epoch for computing RMS
-    pars.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
-    pars.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
-    pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
-    % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
-    % Handle parsing of `pars`
-    pars = utils.parse_parameters(pars, varargin{:});
-    
+    pars = plot.parameters('emg_averages');
 end
-
+pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
      pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end

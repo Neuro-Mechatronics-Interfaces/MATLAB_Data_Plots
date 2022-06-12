@@ -24,60 +24,32 @@ function p = emg_waterfall(x, varargin)
 %      'Trigger_Channel','TRIGGERS','Filtering',get_default_filtering_pars("TMSi","Array","Raw",...
 %      'Apply_Virtual_Reference',false,"Apply_HPF",true,"HPF_Cutoff_Frequency",30))
 
-if (numel(varargin) == 1) && isstruct(varargin{1})
-    pars = varargin{1};
-else
-    % Define default parameters and handle `varargin`
-    pars = struct;
-    pars.Acquisition_Type = "TMSi";
-    pars.Align_Peaks = false;
-    pars.Axes = [];
-    pars.Colormap = 'spring';
-    pars.Data_Channel = nan;
-    pars.EMG_Filters_Applied = false;
-    pars.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
-    pars.Figure_Title = 'Waterfall';
-    pars.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
-    pars.Filtering = get_default_filtering_pars("TMSi","Array","Raw", ...
-        'Apply_Virtual_Reference',false,"Apply_HPF",true,"HPF_Cutoff_Frequency",30); % Return default filtering struct
-    pars.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
-    pars.Inverted_Logic = false;
-    pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
-    pars.N_Trials = 10;
-    [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder');
-    pars.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
-    pars.Sample_Rate = 4000;    % Sample rate from acquisition
-    pars.Sync_Bit = nan;        % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-    pars.T = [-15, 80];     % Time for epochs (milliseconds)
-    pars.T_RMS = [30, 60];  % Time epoch for computing RMS
-    pars.Trigger_Data = [];
-    pars.Trigger_Channel = 'TRIGGER';
-    pars.View = [95, 65]; 
+% Define default parameters and handle `varargin`
 
-    % % % Color limits as well as axes limits % % %
-    pars.C_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
-    pars.X_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
-    pars.Y_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
-    pars.Z_Lim = []; % If empty, use auto-scale, otherwise, fixed scale.
-
-    if isa(x,'TMSiSAGA.Data') || isa(x, 'struct')
-        str = split(x.name,'_');
-        SUBJ = str{1};
-        YYYY = str2double(str{2});
-        MM = str2double(str{3});
-        DD = str2double(str{4});
-        ARRAY = str{5};
-        BLOCK = str2double(str{6});
-        pars.Sample_Rate = x.sample_rate;
-        data_in = x.samples;
-    elseif isa(x, 'char') || isa(x, 'string')
-        SUBJ = x;
-        YYYY = varargin{1};
-        MM = varargin{2};
-        DD = varargin{3};
-        ARRAY = varargin{4};
-        BLOCK = varargin{5};
-        varargin(1:5) = [];
+if isa(x,'TMSiSAGA.Data') || isa(x, 'struct')
+    str = split(x.name,'_');
+    SUBJ = str{1};
+    YYYY = str2double(str{2});
+    MM = str2double(str{3});
+    DD = str2double(str{4});
+    ARRAY = str{5};
+    BLOCK = str2double(str{6});
+    pars = plot.parameters('emg_waterfall');
+    pars.Sample_Rate = x.sample_rate;
+    data_in = x.samples;
+elseif isa(x, 'char') || isa(x, 'string')
+    SUBJ = x;
+    YYYY = varargin{1};
+    MM = varargin{2};
+    DD = varargin{3};
+    ARRAY = varargin{4};
+    BLOCK = varargin{5};
+    varargin(1:5) = [];
+    if isstruct(varargin{1})
+        pars = varargin{1};
+        varargin(1) = [];
+    else
+        pars = plot.parameters('emg_waterfall'); 
     end
 end
 
