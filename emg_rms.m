@@ -49,7 +49,7 @@ function fig = emg_rms(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 % See also: Contents, io.load_tmsi
 
 % % % % SEE PARS STRUCT BELOW % % % %
-if isstruct(varargin{1})
+if (numel(varargin) > 0) && isstruct(varargin{1})
     pars = varargin{1};
     varargin(1) = [];
 else

@@ -1,5 +1,5 @@
 function fig = synergy(s, tag)
-%PLOTSYNERGY Plot muscle synergies from nnmf results
+%SYNERGY Plot muscle synergies from nnmf results
 %
 % Syntax:
 %   fig = plot.synergy(s, tag);

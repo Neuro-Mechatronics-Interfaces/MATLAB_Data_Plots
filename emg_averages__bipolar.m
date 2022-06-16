@@ -9,8 +9,9 @@ function fig = emg_averages__bipolar(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 %
 % See also: Contents, plot.emg_averages
 
-if (numel(varargin) == 1) && isstruct(varargin{1})
+if (numel(varargin) > 0) && isstruct(varargin{1})
     pars = varargin{1};
+    varargin(1) = [];
 else
     pars = struct;
     pars.Acquisition_Type = "TMSi";
@@ -38,9 +39,9 @@ else
     pars.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 
     % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
-    % Handle parsing of `pars`
-    pars = utils.parse_parameters(pars, varargin{:});
 end
+% Handle parsing of `pars`
+pars = utils.parse_parameters(pars, varargin{:});
 
 if ~isstruct(pars.Filtering)
      pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
@@ -74,7 +75,7 @@ channels = horzcat(x.channels{:});
 if isnan(pars.Sync_Bit)
     sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
     if exist(sync_data_in_file, 'file')==0
-        error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
+        error('Plot:Sync', 'No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
     end
     in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
     stops = in.onset;

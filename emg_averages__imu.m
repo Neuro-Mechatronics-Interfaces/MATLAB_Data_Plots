@@ -1,13 +1,13 @@
 function fig = emg_averages__imu(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
-%EMG_AVERAGES__IMU  EMG processing for bipolar TMSi channels
+%EMG_AVERAGES__IMU  EMG processing for TMSi IMU channels
 %
 % Syntax:
-%   fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
+%   fig = plot.emg_averages__imu(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
 %
-% This should be accessed via `"Array"` EMG_Type parameter in
+% This should be accessed via `"IMU"` EMG_Type parameter in
 % `plot_emg_averages`. 
 %
-% See also: Contents, plot_emg_averages
+% See also: Contents, plot.emg_averages
 
 if (numel(varargin) == 1) && isstruct(varargin{1})
     pars = varargin{1};
@@ -70,7 +70,7 @@ channels = horzcat(x.channels{:});
 if isnan(pars.Sync_Bit)
     sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
     if exist(sync_data_in_file, 'file')==0
-        error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
+        error('Plot:Sync', 'No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
     end
     in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
     stops = in.onset;

@@ -1,8 +1,8 @@
 function p = emg_waterfall(x, varargin)
-%PLOT_EMG_WATERFALL Create waterfall plots to show individual stimulus trial responses.
+%EMG_WATERFALL Create waterfall plots to show individual stimulus trial responses.
 %
 % Syntax:
-%   p = emg_waterfall(x, varargin);
+%   p = plot.emg_waterfall(x, varargin);
 %
 % Inputs:
 %   x        - double array containing the averaged segmented data (for the EMG grid)
@@ -45,7 +45,7 @@ elseif isa(x, 'char') || isa(x, 'string')
     ARRAY = varargin{4};
     BLOCK = varargin{5};
     varargin(1:5) = [];
-    if isstruct(varargin{1})
+    if (numel(varargin) > 0) && isstruct(varargin{1})
         pars = varargin{1};
         varargin(1) = [];
     else
@@ -100,7 +100,7 @@ if isempty(pars.Trigger_Data)
     if isnan(pars.Sync_Bit)
         sync_data_in_file = fullfile(gen_data_folder, sprintf('%s_sync.mat', x.name));
         if exist(sync_data_in_file, 'file')==0
-            error('No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
+            error('Plot:Sync', 'No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
         end
         in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
         stops = in.onset;

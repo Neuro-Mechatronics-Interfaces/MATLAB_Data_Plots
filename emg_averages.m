@@ -65,7 +65,7 @@ if ~isnumeric(BLOCK)
 end
 
 % % % % SEE PARS STRUCT BELOW % % % %
-if isstruct(varargin{1})
+if (numel(varargin) > 0) && isstruct(varargin{1})
     pars = varargin{1};
     varargin(1) = [];
 else
@@ -107,7 +107,7 @@ switch pars.EMG_Type
     case 'Accelerometer'
         fig = plot.emg_averages__imu(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
     otherwise
-        error("I have not yet set up handling for EMG_Type == <strong>%s</strong>.\n", pars.EMG_Type);
+        error('Plot:Type', "I have not yet set up handling for EMG_Type == <strong>%s</strong>.\n", pars.EMG_Type);
 end
 
 % If no figure then do not try to save regardless.
