@@ -1,6 +1,7 @@
 % +PLOT  Package with code for generating different types of custom plots.
 %
 % Files
+%   correlation                    - Plot correlation (optionally specifying an axes handle)
 %   diff_simulated_fields          - Plots difference between simulated fields from Block_A and Block_B
 %   emg_averages                   - Handle plotting gridded averages (TMSi/HD-EMG array)
 %   emg_averages__bipolar          - EMG processing for bipolar TMSi channels
