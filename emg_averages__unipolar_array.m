@@ -23,7 +23,7 @@ else
     pars.Filtering = utils.get_default_filtering_pars(); % Return default filtering struct
     pars.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
     pars.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
-    pars.Link_Axes = true;  % Set false to allow axes limits to adaptively set independently
+    pars.Link_Axes = false;  % Set false to allow axes limits to adaptively set independently
     pars.N_SD_RMS = 3.5; % Number of times the RMS to multiply signal by when computing YLIM if it is not manually specified.
     pars.N_Individual_Max = 10; % Max. number of individual traces to superimpose
     [pars.Output_Root, pars.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
@@ -145,10 +145,12 @@ for ich = 1:64
         ylim(ax, pars.YLim);
     else
         noise_bandwidth = max(noise_bandwidth, rms(A((t_sweep >= pars.T_RMS(1)) & (t_sweep <= pars.T_RMS(2)))) * pars.N_SD_RMS);
-        if contains("rectified", lower(pars.Filtering.Name))
-            ylim(ax, [0, noise_bandwidth]);
-        else
-            ylim(ax, [-noise_bandwidth, noise_bandwidth]);
+        if pars.Link_Axes
+            if contains("rectified", lower(pars.Filtering.Name))
+                ylim(ax, [0, noise_bandwidth]);
+            else
+                ylim(ax, [-noise_bandwidth, noise_bandwidth]);
+            end
         end
     end
     if pars.Style == "Individual"
@@ -192,8 +194,8 @@ for ich = 1:64
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
-else
-    linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
+% else
+%     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
 str = utils.get_filtering_label_string(pars.Filtering);
 title(L, [char(strrep(block, '_', '\_')), ': ' str newline 'Stim Averages (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...

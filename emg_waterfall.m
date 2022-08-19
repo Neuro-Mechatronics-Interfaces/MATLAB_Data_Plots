@@ -148,7 +148,7 @@ if isempty(pars.Trigger_Data)
     if isnan(pars.Data_Channel) || pars.Data_Channel==0
         [~, X, ~] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
     else
-        if strcmpi(pars.EMG_Type, 'Bipolar')
+        if strcmpi(pars.EMG_Type, 'Bipolar') && (isnan(pars.Data_Channel) || (pars.Data_Channel == 0))
             for iCh = 1:sum(iBip)
                 [~, X, ~] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
 
