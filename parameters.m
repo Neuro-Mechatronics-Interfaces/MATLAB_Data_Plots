@@ -65,7 +65,7 @@ pars.emg_waterfall.EMG_Filters_Applied = false;
 pars.emg_waterfall.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
 pars.emg_waterfall.Figure_Title = 'Waterfall';
 pars.emg_waterfall.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
-pars.emg_waterfall.Filtering = get_default_filtering_pars("TMSi","Array","Raw", ...
+pars.emg_waterfall.Filtering = utils.get_default_filtering_pars("TMSi","Array","Raw", ...
     'Apply_Virtual_Reference',false,"Apply_HPF",true,"HPF_Cutoff_Frequency",30); % Return default filtering struct
 pars.emg_waterfall.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
 pars.emg_waterfall.Inverted_Logic = false;
@@ -86,6 +86,14 @@ pars.emg_waterfall.C_Lim = []; % If empty, use auto-scale, otherwise, fixed scal
 pars.emg_waterfall.X_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_waterfall.Y_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_waterfall.Z_Lim = []; % If empty, use auto-scale, otherwise, fixed scale.
+
+%% For impedances
+% Impedance parameters
+pars.impedance.FileTag = '';
+pars.impedance.CLim = [0 150]; % kOhms
+pars.impedance.AxLim = [0.5 8.5];
+pars.impedance.Colormap = cm.map('greenred'); % Like TMSi one
+pars.impedance.Colorscale = 'log';
 
 %% Handle parsing
 N = numel(varargin);

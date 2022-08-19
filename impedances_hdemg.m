@@ -28,7 +28,8 @@ function fig = impedances_hdemg(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 %
 % See also: Contents
 
-pars = parameters('Impedance');
+pars = plot.parameters('impedance');
+[pars.DataFolder, pars.FigureFolder] = parameters('raw_data_folder', 'generated_data_folder');
 pars = utils.parse_parameters(pars, varargin{:});
 
 if (numel(ARRAY) > 1) || (numel(BLOCK) > 1)
