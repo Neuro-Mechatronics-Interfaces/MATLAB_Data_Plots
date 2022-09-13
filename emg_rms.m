@@ -53,7 +53,7 @@ if (numel(varargin) > 0) && isstruct(varargin{1})
     pars = varargin{1};
     varargin(1) = [];
 else
-    pars = parameters('emg_rms'); 
+    pars = plot.parameters('emg_rms'); 
 end
 % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
 
@@ -109,6 +109,9 @@ t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds
 i_pre = t_sweep < pars.Pre_Stimulus_RMS_ms;
 i_post = t_sweep > pars.Post_Stimulus_RMS_ms;
 Zt = grid.triggered_array(Z', trigs, n_pre, n_post);
+if pars.Subtract_Mean
+    Zt = Zt - mean(Zt,3); 
+end
 
 Z_pre = squeeze(rms(Zt(:, i_pre, :), 2));
 Z_post = squeeze(rms(Zt(:, i_post, :), 2));

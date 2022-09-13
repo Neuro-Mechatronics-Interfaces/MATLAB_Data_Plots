@@ -166,8 +166,14 @@ if ~isnan(pars.N_Trials)
     if pars.N_Trials > size(X,1)
         pars.N_Trials = size(X,1);
     end
-    X = X(1:pars.N_Trials,:);
+    if numel(pars.N_Trials) == 1
+        trials = 1:pars.N_Trials;
+    else
+        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+    end 
+    X = X(trials,:);
 end
+N = size(X,1);
 
 % Align peaks (some trials may need assistance with stim event alignments
 % due to manual searching of events)
@@ -175,10 +181,14 @@ if pars.Align_Peaks
     X = math.align_peaks(X, n_pre);
 end
 
-[N, M] = size(X);
+if pars.Subtract_Mean
+    X = X - mean(X,1); 
+end
+
+M = size(X,2);
 t_sweep = (-n_pre:n_post)/pars.Sample_Rate * 1e3; % Convert from samples to seconds, then milliseconds
 times = repmat(t_sweep,N,1);
-trials = repmat(1:N,M,1)';
+trials = repmat(trials,M,1)';
 
 % Generate figure
 if isempty(pars.Axes)
@@ -220,7 +230,7 @@ end
 
 % Generating figure title
 str = get_filtering_label_string(pars.Filtering);
-title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(pars.N_Trials))  ') Waterfall'], ...
+title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Waterfall'], ...
     'FontName', 'Tahoma', ...
     'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
 
