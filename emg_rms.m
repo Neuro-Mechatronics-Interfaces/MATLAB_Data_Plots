@@ -266,7 +266,7 @@ if isempty(pars.CLim) && isempty(pars.RMS_Max_Response_Ratio)
     RMS_Max_Response_Ratio = pars.CLim(2); 
 end
 
-str = get_filtering_label_string(pars.Filtering);
+str = utils.get_filtering_label_string(pars.Filtering);
 title(ax, [char(strrep(block, '_', '\_')), ': ' str newline 'Response RMS Ratio (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
     'FontName', 'Tahoma', ...
     'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
