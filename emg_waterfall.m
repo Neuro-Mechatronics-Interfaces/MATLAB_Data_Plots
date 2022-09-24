@@ -229,7 +229,7 @@ end
 
 
 % Generating figure title
-str = get_filtering_label_string(pars.Filtering);
+str = utils.get_filtering_label_string(pars.Filtering);
 title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Waterfall'], ...
     'FontName', 'Tahoma', ...
     'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
