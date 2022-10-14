@@ -80,7 +80,11 @@ end
 
 [YYYY, MM, DD] = utils.parse_date_args(YYYY, MM, DD);
 % x = io.load_tmsi('Frank', 2021, 12, 9, "B", 155, ".poly5", "R:\NMLShare\raw_data\primate");
-x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+if isempty(pars.Data)
+    x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+else
+    x = pars.Data;
+end
 
 if isempty(x)
     fig = gobjects(1);

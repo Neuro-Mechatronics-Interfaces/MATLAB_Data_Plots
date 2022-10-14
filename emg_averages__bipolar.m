@@ -24,8 +24,11 @@ pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
      pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
-
-[x, info] = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+if isempty(pars.Data)
+    x = pars.Data;
+else
+    x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+end
 if isempty(x)
     fig = gobjects(1);
     return;
@@ -39,10 +42,7 @@ tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
 block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
 gen_data_folder = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
 fig = default.figure(block, 'Position', [0.1 0.1 0.8 0.8]);
-
-
-% v1.4: After adding `get_default_filtering_pars() etc.`
-fig.UserData = struct('x', x, 'info', info, 'version', 1.4); % Associate thse data to the figure.
+fig.UserData = struct('x', x, 'version', pars.Version); % Associate thse data to the figure.
 % Get trigger channel
 channels = horzcat(x.channels{:});
 % iTrigChannel = find(contains({channels.alternative_name}, pars.Trigger_Channel));

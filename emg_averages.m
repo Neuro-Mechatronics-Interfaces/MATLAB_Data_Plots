@@ -133,7 +133,10 @@ if nargout < 1
             mkdir(out_folder_2);
         end
     end
-    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_Mean_%s_EMG_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false); 
+    default.savefig(fig, ...
+        fullfile(out_folder_2, block), ...
+        sprintf('%d_%d_Mean_%s_EMG_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), ...
+        false); 
 end
 
     

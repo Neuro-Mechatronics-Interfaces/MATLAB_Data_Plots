@@ -40,7 +40,7 @@ fig = default.figure(block, 'Position', pars.Position);
 
 
 % v1.4: After adding `get_default_filtering_pars() etc.`
-fig.UserData = struct('x', x, 'info', info, 'version', pars.Version, 'pars', pars); % Associate thse data to the figure.
+fig.UserData = struct('x', x, 'version', pars.Version, 'pars', pars); % Associate thse data to the figure.
 % Get trigger channel
 channels = horzcat(x.channels{:});
 
