@@ -7,7 +7,7 @@ function varargout = parameters(varargin)
 % See also: Contents
 
 pars = struct;
-VERSION = "2.1.0";
+VERSION = "2.1.2";
 
 %% For emg_averages
 pars.emg_averages = struct;
@@ -47,7 +47,7 @@ pars.emg_stack.Blank_Stim = true;
 pars.emg_stack.Data = [];
 pars.emg_stack.EMG_Filters_Applied = false; 
 pars.emg_stack.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
-pars.emg_stack.Filtering = utils.get_default_filtering_pars(pars.emg_stack.Acquisition_Type, pars.emg_stack.EMG_Type, "Rectified", 'Stim_Blanking_Epoch', [-10, 20]); % Return default filtering struct
+pars.emg_stack.Filtering = utils.get_default_filtering_pars(pars.emg_stack.Acquisition_Type, pars.emg_stack.EMG_Type, "Rectified"); % Return default filtering struct
 pars.emg_stack.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
 pars.emg_stack.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
 pars.emg_stack.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
@@ -55,7 +55,6 @@ pars.emg_stack.N_Rows = nan; % Number of rows in grid layout
 pars.emg_stack.N_Columns = nan; % Number of columns in grid layout
 pars.emg_stack.N_Trials = 30; % Number of trials (max)
 [pars.emg_stack.Output_Root, pars.emg_stack.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
-pars.emg_stack.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
 pars.emg_stack.Scale_Factor = 3.5;
 pars.emg_stack.Subtract_Linear_Fit = false; % Set false to skip the linear-fit subtraction.
 pars.emg_stack.Subtract_Mean = false; % Subtract mean?

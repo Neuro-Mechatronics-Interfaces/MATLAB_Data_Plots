@@ -102,7 +102,12 @@ else
     [stops, trigs, ~] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 
-
+% Check that the first trigger onset is before the first "stop" onset.
+if stops(1) < trigs(1)
+    tmp = stops;
+    stops = trigs;
+    trigs = tmp;
+end
 
 if strcmpi(pars.EMG_Type, 'Bipolar')
     iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
@@ -149,7 +154,6 @@ if ~isnan(pars.N_Trials)
     end 
     X = X(trials,:);
 end
-N = size(X,1);
 
 % Align peaks (some trials may need assistance with stim event alignments
 % due to manual searching of events)
@@ -161,7 +165,6 @@ if pars.Subtract_Mean
     X = X - mean(X,2); 
 end
 
-% [N, M] = size(X);
 N = size(X, 1);
 t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds, then milliseconds
 
