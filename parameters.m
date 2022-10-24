@@ -7,7 +7,7 @@ function varargout = parameters(varargin)
 % See also: Contents
 
 pars = struct;
-VERSION = "2.1.2";
+VERSION = "2.2.0";
 
 %% For emg_averages
 pars.emg_averages = struct;

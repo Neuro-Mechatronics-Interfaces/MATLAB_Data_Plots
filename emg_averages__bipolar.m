@@ -105,6 +105,12 @@ else
 end
 stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
 ax = [];
+if pars.Filtering.Apply_Stim_Blanking
+    i_pre = 1:(n_pre-pars.Filtering.Stim_Blanking_Epoch(1));
+else
+    i_pre = 1:n_pre;
+end
+
 for iCh = 1:sum(iBip)
     
     [A, X, trigs] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
@@ -121,10 +127,12 @@ for iCh = 1:sum(iBip)
         X = X'; % Return to original orientation.
     end
     if contains(lower(pars.Filtering.Name), "rectified")
-        X = max(X - mean(X(:, t_sweep < 0), 2), zeros(size(X)));
-        A = mean(X, 1);
+        X = max(X - mean(X(:, i_pre), 2), zeros(size(X)));
     end
-    
+    if pars.Filtering.Apply_Pre_Stimulus_Normalization
+        X = X./std(X,0,2); 
+    end
+    A = mean(X,1);
     ax = nexttile(L);
     if size(X, 2) ~= numel(t_sweep)
         warning('Timing mismatch - block skipped.');

@@ -86,12 +86,18 @@ else
 end
 noise_bandwidth = 1e-6; % Compute noise bandwidth
 
+if pars.Filtering.Apply_Stim_Blanking
+    i_pre = 1:(n_pre-pars.Filtering.Stim_Blanking_Epoch(1));
+else
+    i_pre = 1:n_pre;
+end
+
 for ich = 1:64
     ax = nexttile(L, iTile(ich));
     if ~pars.Filtering.Add_To_Plots(ich)
         continue;
     end
-    [A, X, trigs] = math.triggered_average(trigs, z(ich, :), n_pre, n_post, false, false, false);
+    [~, X, trigs] = math.triggered_average(trigs, z(ich, :), n_pre, n_post, false, false, false);
     if pars.Subtract_Mean
         X = X - mean(X,1); 
     end
@@ -102,14 +108,15 @@ for ich = 1:64
         X = X'; % Return to original orientation.
     end
     if contains(lower(pars.Filtering.Name), "rectified")
-        X = max(X - mean(X(:, t_sweep < 0), 2), zeros(size(X)));
-        A = mean(X, 1);
+        X = max(X - mean(X(:, i_pre), 2), zeros(size(X)));
     end
     if pars.Filtering.Apply_Max_Rescale
         X = X./max(max(abs(X))); 
-        A = mean(X, 1);
     end
-    
+    if pars.Filtering.Apply_Pre_Stimulus_Normalization
+        X = X./std(X,0,2); 
+    end
+    A = mean(X, 1);
     if size(X, 2) ~= numel(t_sweep)
         warning('Timing mismatch - block skipped.');
         delete(fig); 
