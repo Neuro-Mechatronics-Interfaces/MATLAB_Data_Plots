@@ -105,7 +105,7 @@ else
     in = load(sync_data_in_file, 'offset', 'sync_data');
     trigs = in.offset;
 end
-[Z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, numel(trigs));
+[Z, ~, pars.Filtering] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs);
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
 n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then samples
 t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds, then milliseconds
