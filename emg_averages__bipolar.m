@@ -84,7 +84,7 @@ if pars.Filtering.Apply_Virtual_Reference
 else
     tmp = false;
 end
-[z, ~, pars.Filtering] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+[z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
 pars.Filtering.Apply_Virtual_Reference = tmp; % Revert
 if (isnan(pars.N_Rows)) || (isnan(pars.N_Columns))
     L = tiledlayout(fig, 'flow');
