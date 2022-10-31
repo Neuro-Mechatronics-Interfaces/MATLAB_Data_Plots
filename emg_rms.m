@@ -271,9 +271,30 @@ if isempty(pars.CLim) && isempty(pars.RMS_Max_Response_Ratio)
 end
 
 str = utils.get_filtering_label_string(pars.Filtering);
-title(ax, [char(strrep(block, '_', '\_')), ': ' str newline 'Response RMS Ratio (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
-    'FontName', 'Tahoma', ...
-    'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
+N = numel(trigs);
+if pars.Anonymize
+    tmp = strsplit(block, '_');
+    switch upper(string(SUBJ))
+        case "MATS"
+            block_a = strjoin(['NG', tmp(2:end)], '\\_');
+        case "PULKIT"
+            block_a = strjoin(['QH', tmp(2:end)], '\\_');
+        case "CHAITANYA"
+            block_a = strjoin(['DH', tmp(2:end)], '\\_');
+        case "DOUG"
+            block_a = strjoin(['EX', tmp(2:end)], '\\_');
+        otherwise
+            block_a = strjoin(tmp, '\\_');
+    end
+    title(ax, [char(block_a), ': ' str newline ' (N = ' char(num2str(N))  ') RMS'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+else
+    title(ax, [char(strrep(block, '_', '\_')), ': ' str newline ' (N = ' char(num2str(N))  ') RMS'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+end
+
 xlabel(ax, 'Channel', 'FontName', 'Tahoma', 'Color', 'k', 'FontSize', 11);
 ylabel(ax, 'Channel', 'FontName', 'Tahoma', 'Color', 'k', 'FontSize', 11);
 % text(ax, 0.25, 1.5,'Lateral, Distal', ...

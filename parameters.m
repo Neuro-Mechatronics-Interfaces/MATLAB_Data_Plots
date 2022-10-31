@@ -7,11 +7,12 @@ function varargout = parameters(varargin)
 % See also: Contents
 
 pars = struct;
-VERSION = "2.2.0";
+VERSION = "2.3.0";
 
 %% For emg_averages
 pars.emg_averages = struct;
 pars.emg_averages.Acquisition_Type = "TMSi";
+pars.emg_averages.Anonymize = true;
 pars.emg_averages.Blank_Stim = false;
 pars.emg_averages.Data = [];
 pars.emg_averages.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
@@ -44,6 +45,7 @@ pars.emg_stack = struct;
 pars.emg_stack.Axes = [];
 pars.emg_stack.Acquisition_Type = "TMSi";
 pars.emg_stack.Align_Peaks = false;
+pars.emg_stack.Anonymize = true;
 pars.emg_stack.Blank_Stim = false;
 pars.emg_stack.Data = [];
 pars.emg_stack.EMG_Filters_Applied = false; 
@@ -69,6 +71,7 @@ pars.emg_stack.Version = VERSION;
 %% For emg_rms
 pars.emg_rms = struct;
 pars.emg_rms.Acquisition_Type = "TMSi";
+pars.emg_rms.Anonymize = true;
 pars.emg_rms.Blank_Stim = false;
 pars.emg_rms.EMG_Type = "RMS"; % Can be: "Array" | "Bipolar" | "RMS"
 pars.emg_rms.Data = [];
@@ -77,13 +80,13 @@ pars.emg_rms.File_Type = ".mat"; % Can be ".mat" | ".poly5"
 pars.emg_rms.Filtering = utils.get_default_filtering_pars(pars.emg_rms.Acquisition_Type, pars.emg_rms.EMG_Type, "Rectified"); % Return default filtering struct
 pars.emg_rms.Axes = [];
 [pars.emg_rms.Output_Root, pars.emg_rms.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
-pars.emg_rms.Pre_Stimulus_RMS_ms = -2.5; % Number of milliseconds relative to stimulus that is the latest the pre-stimulus window goes.
-pars.emg_rms.Post_Stimulus_RMS_ms = 7.5; % Number of milliseconds after stimulus before computing RMS window
+pars.emg_rms.Pre_Stimulus_RMS_ms = -20; % Number of milliseconds relative to stimulus that is the latest the pre-stimulus window goes.
+pars.emg_rms.Post_Stimulus_RMS_ms = 20; % Number of milliseconds after stimulus before computing RMS window
 pars.emg_rms.RMS_Response_Ratio_Threshold = []; % Minimum amount to consider putting channel name on contour map
 pars.emg_rms.RMS_Max_Response_Ratio = []; % Clip color scale above this value.
 pars.emg_rms.Subtract_Mean = false; % Subtract cross-trial mean?
 pars.emg_rms.Sync_Bit = nan; % The bit address for STIM sync TTL signal on TRIGGERS channel of TMSi.
-pars.emg_rms.T = [-17.5, 22.5]; % Time for epochs (milliseconds)
+pars.emg_rms.T = [-30, 30]; % Time for epochs (milliseconds)
 pars.emg_rms.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
 pars.emg_rms.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_rms.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
@@ -94,6 +97,7 @@ pars.emg_rms.Version = VERSION;
 pars.emg_waterfall = struct;
 pars.emg_waterfall.Acquisition_Type = "TMSi";
 pars.emg_waterfall.Align_Peaks = false;
+pars.emg_waterfall.Anonymize = true;
 pars.emg_waterfall.Axes = [];
 pars.emg_waterfall.Blank_Stim = false;
 pars.emg_waterfall.Colormap = 'spring';

@@ -86,6 +86,11 @@ end
 
 tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
 block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
+if pars.Anonymize
+
+else
+    
+end
 gen_data_folder = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
 
 % Get trigger channel
@@ -138,7 +143,13 @@ n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then sa
 
 
 z = z(CHANNEL,:);
-chan_name = channels(CHANNEL).alternative_name;
+name = strrep(channels(CHANNEL).alternative_name, ' ', '');
+try
+    stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+    chan_name = sprintf('%s (%s)', strrep(stim.map.Muscles.(name), '_', '-'), name);
+catch
+    chan_name = name;
+end
 [~, X, ~] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
 
 
@@ -206,9 +217,28 @@ xline(ax, 0, 'r:', "Stim", 'LineWidth', 1.5);
 % Generating figure title
 str = utils.get_filtering_label_string(pars.Filtering);
 
-title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Stacked'], ...
-    'FontName', 'Tahoma', ...
-    'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+if pars.Anonymize
+    tmp = strsplit(block, '_');
+    switch upper(string(SUBJ))
+        case "MATS"
+            block_a = strjoin(['NG', tmp(2:end)], '\\_');
+        case "PULKIT"
+            block_a = strjoin(['QH', tmp(2:end)], '\\_');
+        case "CHAITANYA"
+            block_a = strjoin(['DH', tmp(2:end)], '\\_');
+        case "DOUG"
+            block_a = strjoin(['EX', tmp(2:end)], '\\_');
+        otherwise
+            block_a = strjoin(tmp, '\\_');
+    end
+    title(ax, [char(block_a), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Stacked'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+else
+    title(ax, [char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Stacked'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+end
 
 % Set figure view
 xlabel('Time (ms)', pars.Font{:});

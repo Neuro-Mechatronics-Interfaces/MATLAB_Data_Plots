@@ -188,9 +188,30 @@ if pars.Link_Axes
 %     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
 str = utils.get_filtering_label_string(pars.Filtering);
-title(L, [char(strrep(block, '_', '\_')), ': ' str newline 'Stim Averages (solid line | N = ' char(num2str(numel(trigs)))  ')'], ...
-    'FontName', 'Tahoma', ...
-    'Color', 'k', 'FontSize', 14, 'FontWeight', 'bold');
+N = numel(trigs);
+if pars.Anonymize
+    tmp = strsplit(block, '_');
+    switch upper(string(SUBJ))
+        case "MATS"
+            block_a = strjoin(['NG', tmp(2:end)], '\\_');
+        case "PULKIT"
+            block_a = strjoin(['QH', tmp(2:end)], '\\_');
+        case "CHAITANYA"
+            block_a = strjoin(['DH', tmp(2:end)], '\\_');
+        case "DOUG"
+            block_a = strjoin(['EX', tmp(2:end)], '\\_');
+        otherwise
+            block_a = strjoin(tmp, '\\_');
+    end
+    title(L, [char(block_a), ': ' str newline ' (N = ' char(num2str(N))  ') Array'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+else
+    title(L, [char(strrep(block, '_', '\_')), ': ' str newline ' (N = ' char(num2str(N))  ') Array'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+end
+
 finfo = strsplit(block, '_');
 out_folder = fullfile(pars.Output_Root, SUBJ, tank, finfo{end}, '.averages');
 out_name = fullfile(out_folder, sprintf('%s_%d_%d_Mean_Array_EMG__%s', block, round(pars.T(1)), round(pars.T(2)), pars.Filtering.Name));

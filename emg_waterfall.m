@@ -230,9 +230,29 @@ end
 
 % Generating figure title
 str = utils.get_filtering_label_string(pars.Filtering);
-title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Waterfall'], ...
-    'FontName', 'Tahoma', ...
-    'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+if pars.Anonymize
+    tmp = strsplit(block, '_');
+    switch upper(string(SUBJ))
+        case "MATS"
+            block_a = strjoin(['NG', tmp(2:end)], '\\_');
+        case "PULKIT"
+            block_a = strjoin(['QH', tmp(2:end)], '\\_');
+        case "CHAITANYA"
+            block_a = strjoin(['DH', tmp(2:end)], '\\_');
+        case "DOUG"
+            block_a = strjoin(['EX', tmp(2:end)], '\\_');
+        otherwise
+            block_a = strjoin(tmp, '\\_');
+    end
+    title([char(block_a), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Stacked'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+else
+    title([char(strrep(block, '_', '\_')), ': ' str newline 'Chan:' chan_name ' (N = ' char(num2str(N))  ') Stacked'], ...
+        'FontName', 'Tahoma', ...
+        'Color', 'k', 'FontSize', 10, 'FontWeight', 'bold');
+end
+
 
 % Set figure view
 % [caz,cel] = view(ax, [1 0.001 6]); % vertical stack
