@@ -73,7 +73,7 @@ else
 end
 pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
-     pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 
 if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
