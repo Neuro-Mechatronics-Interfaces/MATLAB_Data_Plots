@@ -106,7 +106,7 @@ if isempty(pars.Trigger_Data)
         stops = in.onset;
         trigs = in.offset;
     else
-        [stops, trigs, ~] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+        [stops, trigs, ~] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
     end
 end
 

@@ -102,7 +102,7 @@ if exist(sync_data_in_file, 'file')==0
     end
     [~, trigs] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder);
 else
-    in = load(sync_data_in_file, 'offset', 'sync_data');
+    in = load(sync_data_in_file, 'offset', 'onset', 'sync_data');
     trigs = in.offset;
 end
 [Z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs);

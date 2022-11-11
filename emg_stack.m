@@ -86,11 +86,6 @@ end
 
 tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD); % data "tank"
 block = sprintf('%s_%s_%d', tank, ARRAY, BLOCK); % experimental "block" (recording within tank)
-if pars.Anonymize
-
-else
-    
-end
 gen_data_folder = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
 
 % Get trigger channel
@@ -104,14 +99,18 @@ if isnan(pars.Sync_Bit)
     stops = in.onset;
     trigs = in.offset;
 else
-    [stops, trigs, ~] = parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
+    [stops, trigs, ~] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 
 % Check that the first trigger onset is before the first "stop" onset.
 if stops(1) < trigs(1)
-    tmp = stops;
-    stops = trigs;
-    trigs = tmp;
+    if numel(stops) > numel(trigs)
+        stops(1) = [];
+    else
+        tmp = stops;
+        stops = trigs;
+        trigs = tmp;
+    end
 end
 
 if strcmpi(pars.EMG_Type, 'Bipolar')
