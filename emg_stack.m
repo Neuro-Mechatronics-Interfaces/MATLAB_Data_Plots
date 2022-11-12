@@ -102,6 +102,13 @@ else
     [stops, trigs, ~] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 
+% Check if there are any trigger events.
+if (numel(trigs) < 1) || (numel(stops) < 1)
+    warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
+    fig = gobjects(1);
+    return;
+end
+
 % Check that the first trigger onset is before the first "stop" onset.
 if stops(1) < trigs(1)
     if numel(stops) > numel(trigs)
@@ -111,6 +118,19 @@ if stops(1) < trigs(1)
         stops = trigs;
         trigs = tmp;
     end
+end
+
+% Potentially select subset of trials to average
+if ~isnan(pars.N_Trials)
+    if pars.N_Trials(1) > numel(trigs)
+        pars.N_Trials(1) = numel(trigs);
+    end
+    if numel(pars.N_Trials) == 1
+        trials = 1:pars.N_Trials;
+    else
+        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+    end 
+    trigs = trigs(trials);
 end
 
 if strcmpi(pars.EMG_Type, 'Bipolar')
@@ -134,6 +154,9 @@ else
     if pars.Blank_Stim
         pars.Filtering.Apply_Stim_Blanking = true;
     end
+    % Trigs is returned because the filtering function can exclude
+    % out-of-bounds trigger sample indices based on stim-artifact-rejection
+    % sample epoch width.
     [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
 end
 
@@ -149,21 +172,11 @@ try
 catch
     chan_name = name;
 end
-[~, X, ~] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
 
-
-% Trim number of channels to show
-if ~isnan(pars.N_Trials)
-    if pars.N_Trials > size(X,1)
-        pars.N_Trials = size(X,1);
-    end
-    if numel(pars.N_Trials) == 1
-        trials = 1:pars.N_Trials;
-    else
-        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
-    end 
-    X = X(trials,:);
-end
+% Trigs is returned because the averaging function can exclude
+% out-of-bounds trigger sample indices based on snippet
+% sampling epoch width (samples pre- and post-TTL marker).
+[~, X, trigs] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
 
 % Align peaks (some trials may need assistance with stim event alignments
 % due to manual searching of events)
@@ -171,7 +184,9 @@ if pars.Align_Peaks
     X = math.align_peaks(X, n_pre);
 end
 
-if pars.Subtract_Mean
+if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
+    pars.Filtering.Subtract_Cross_Trial_Mean = true;
+    pars.Subtract_Mean = true;
     X = X - mean(X,2); 
 end
 
@@ -200,9 +215,15 @@ end
 
 % Scale them so that most values should be < 1.
 X = zscore(X, 0, 'all')./pars.Scale_Factor + (1:N)';
-c = parula(N).*0.9;
+
+if isempty(pars.Series)
+    pars.Series = 1:N;
+    c = parula(N).*0.9;
+else
+    c = parula(numel(unique(pars.Series))).*0.9;
+end
 for ii = 1:N
-    line(ax, t_sweep, X(ii,:), 'Color', c(ii,:), 'LineWidth', 1.5, 'DisplayName', sprintf('Trial-%d', ii));
+    line(ax, t_sweep, X(ii,:), 'Color', c(pars.Series(ii),:), 'LineWidth', 1.5, 'DisplayName', sprintf('Trial-%d', ii));
 end
 if ~isempty(pars.XLim)
     xlim(ax, pars.XLim);

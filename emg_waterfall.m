@@ -61,11 +61,11 @@ end
 
 if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
     % Can only reach here if char arguments were given instead of x directly
-    fig = gobjects(numel(BLOCK), numel(ARRAY));
+    p = gobjects(numel(BLOCK), numel(ARRAY));
     for iB = 1:numel(BLOCK)
         for iA = 1:numel(ARRAY)
             if nargout > 0
-                fig(iB, iA) = plot.emg_waterfall(SUBJ, YYYY, MM, DD, ARRAY(iA), BLOCK(iB), pars);
+                p(iB, iA) = plot.emg_waterfall(SUBJ, YYYY, MM, DD, ARRAY(iA), BLOCK(iB), pars);
             else
                 plot.emg_waterfall(SUBJ, YYYY, MM, DD, ARRAY(iA), BLOCK(iB), pars);
             end
@@ -110,6 +110,37 @@ if isempty(pars.Trigger_Data)
     end
 end
 
+% Check if there are any trigger events.
+if (numel(trigs) < 1) || (numel(stops) < 1)
+    warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
+    p = gobjects(1);
+    return;
+end
+
+% Check that the first trigger onset is before the first "stop" onset.
+if stops(1) < trigs(1)
+    if numel(stops) > numel(trigs)
+        stops(1) = [];
+    else
+        tmp = stops;
+        stops = trigs;
+        trigs = tmp;
+    end
+end
+
+% Potentially select subset of trials to average
+if ~isnan(pars.N_Trials)
+    if pars.N_Trials(1) > numel(trigs)
+        pars.N_Trials(1) = numel(trigs);
+    end
+    if numel(pars.N_Trials) == 1
+        trials = 1:pars.N_Trials;
+    else
+        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+    end 
+    trigs = trigs(trials);
+end
+
 if strcmpi(pars.EMG_Type, 'Bipolar')
     iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
     if sum(iBip) == 0
@@ -127,6 +158,9 @@ end
 if pars.EMG_Filters_Applied==true
     z = data;
 else
+    % Trigs is returned because the filtering function can exclude
+    % out-of-bounds trigger sample indices based on stim-artifact-rejection
+    % sample epoch width.
     [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
 end
 
@@ -146,33 +180,24 @@ end
 if isempty(pars.Trigger_Data)
 
     if isnan(pars.Data_Channel) || pars.Data_Channel==0
-        [~, X, ~] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
+        % Trigs is returned because the averaging function can exclude
+        % out-of-bounds trigger sample indices based on snippet
+        % sampling epoch width (samples pre- and post-TTL marker).
+        [~, X, trigs] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
     else
         if strcmpi(pars.EMG_Type, 'Bipolar') && (isnan(pars.Data_Channel) || (pars.Data_Channel == 0))
             for iCh = 1:sum(iBip)
-                [~, X, ~] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
+                [~, X, trigs] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
 
             end
         else
-            [~, X, ~] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
+            [~, X, trigs] = math.triggered_average(trigs, z, n_pre, n_post, false, false, false);
         end
     end
 else
     X = pars.Trigger_Data;
 end
 
-% Trim number of channels to show
-if ~isnan(pars.N_Trials)
-    if pars.N_Trials > size(X,1)
-        pars.N_Trials = size(X,1);
-    end
-    if numel(pars.N_Trials) == 1
-        trials = 1:pars.N_Trials;
-    else
-        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
-    end 
-    X = X(trials,:);
-end
 N = size(X,1);
 
 % Align peaks (some trials may need assistance with stim event alignments
@@ -181,7 +206,9 @@ if pars.Align_Peaks
     X = math.align_peaks(X, n_pre);
 end
 
-if pars.Subtract_Mean
+if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
+    pars.Filtering.Subtract_Cross_Trial_Mean = true;
+    pars.Subtract_Mean = true;
     X = X - mean(X,1); 
 end
 

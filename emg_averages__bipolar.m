@@ -62,7 +62,34 @@ if isnan(pars.Sync_Bit)
 else
     [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
-
+if (numel(trigs) < 1) || (numel(stops) < 1)
+    warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
+    delete(fig);
+    fig = gobjects(1);
+    return;
+end
+% Check that the first trigger onset is before the first "stop" onset.
+if stops(1) < trigs(1)
+    if numel(stops) > numel(trigs)
+        stops(1) = [];
+    else
+        tmp = stops;
+        stops = trigs;
+        trigs = tmp;
+    end
+end
+% Potentially select subset of trials to average
+if ~isnan(pars.N_Trials)
+    if pars.N_Trials(1) > numel(trigs)
+        pars.N_Trials(1) = numel(trigs);
+    end
+    if numel(pars.N_Trials) == 1
+        trials = 1:pars.N_Trials;
+    else
+        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+    end 
+    trigs = trigs(trials);
+end
 iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
 if sum(iBip) == 0
     delete(fig);
@@ -84,6 +111,9 @@ if pars.Filtering.Apply_Virtual_Reference
 else
     tmp = false;
 end
+% Trigs is returned because the filtering function can exclude
+% out-of-bounds trigger sample indices based on stim-artifact-rejection
+% sample epoch width.
 [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
 pars.Filtering.Apply_Virtual_Reference = tmp; % Revert
 if (isnan(pars.N_Rows)) || (isnan(pars.N_Columns))
@@ -111,8 +141,15 @@ else
     i_pre = 1:n_pre;
 end
 
+if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
+    pars.Filtering.Subtract_Cross_Trial_Mean = true;
+    pars.Subtract_Mean = true;
+end
 for iCh = 1:sum(iBip)
     
+    % Trigs is returned because the averaging function can exclude
+    % out-of-bounds trigger sample indices based on snippet
+    % sampling epoch width (samples pre- and post-TTL marker).
     [A, X, trigs] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
     T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
     if all(abs(A) < eps) % Then this channel is "empty"

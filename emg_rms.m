@@ -100,12 +100,40 @@ if exist(sync_data_in_file, 'file')==0
     if isnan(pars.Sync_Bit)
         error('No sync data file (<strong>%s</strong>): please run `parse_bit_sync` first! (or, set Sync_Bit to non-NaN value)', sync_data_in_file);
     end
-    [~, trigs] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder);
+    [stops, trigs] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder);
 else
     in = load(sync_data_in_file, 'offset', 'onset', 'sync_data');
     trigs = in.offset;
+    stops = in.onset;
 end
-[Z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs);
+if (numel(trigs) < 1) || (numel(stops) < 1)
+    warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
+    fig = gobjects(1);
+    return;
+end
+% Check that the first trigger onset is before the first "stop" onset.
+if stops(1) < trigs(1)
+    if numel(stops) > numel(trigs)
+        stops(1) = [];
+    else
+        tmp = stops;
+        stops = trigs;
+        trigs = tmp;
+    end
+end
+% Potentially select subset of trials to average
+if ~isnan(pars.N_Trials)
+    if pars.N_Trials(1) > numel(trigs)
+        pars.N_Trials(1) = numel(trigs);
+    end
+    if numel(pars.N_Trials) == 1
+        trials = 1:pars.N_Trials;
+    else
+        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+    end 
+    trigs = trigs(trials);
+end
+[Z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
 n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then samples
 t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds, then milliseconds
@@ -113,8 +141,10 @@ t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds
 i_pre = t_sweep < pars.Pre_Stimulus_RMS_ms;
 i_post = t_sweep > pars.Post_Stimulus_RMS_ms;
 Zt = grid.triggered_array(Z', trigs, n_pre, n_post);
-if pars.Subtract_Mean
+if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
     Zt = Zt - mean(Zt,3); 
+    pars.Filtering.Subtract_Cross_Trial_Mean = true;
+    pars.Subtract_Mean = true;
 end
 
 Z_pre = squeeze(rms(Zt(:, i_pre, :), 2));
