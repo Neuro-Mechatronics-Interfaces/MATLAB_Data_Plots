@@ -146,7 +146,7 @@ for iCh = 1:sum(iIMU)
     [A, X, trigs] = math.triggered_average(trigs, z(iCh, :), n_pre, n_post, false, false, false);
     T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
     if pars.Subtract_Mean
-        X = X - mean(X,1); 
+        X = abs(X - mean(X,1)); 
     end
     if all(abs(A) < eps) % Then this channel is "empty"
         continue;
@@ -178,7 +178,7 @@ for iCh = 1:sum(iIMU)
         ylim(ax, pars.YLim);
     else
         noise_bandwidth = max(noise_bandwidth, rms(A((t_sweep >= pars.T_RMS(1)) & (t_sweep <= pars.T_RMS(2)))) * pars.N_SD_RMS);
-        if contains("rectified", lower(pars.Filtering.Name))
+        if contains("rectified", lower(pars.Filtering.Name)) || pars.Filtering.Subtract_Cross_Trial_Mean
             ylim(ax, [0, noise_bandwidth]);
         else
             ylim(ax, [-noise_bandwidth, noise_bandwidth]);

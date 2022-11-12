@@ -138,7 +138,7 @@ for ich = 1:64
     % sampling epoch width (samples pre- and post-TTL marker).
     [~, X, trigs] = math.triggered_average(trigs, z(ich, :), n_pre, n_post, false, false, false);
     if pars.Subtract_Mean
-        X = X - mean(X,1); 
+        X = abs(X - mean(X,1)); 
     end
     T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
     if pars.Subtract_Linear_Fit
@@ -175,7 +175,7 @@ for ich = 1:64
     else
         noise_bandwidth = max(noise_bandwidth, rms(A((t_sweep >= pars.T_RMS(1)) & (t_sweep <= pars.T_RMS(2)))) * pars.N_SD_RMS);
         if pars.Link_Axes
-            if contains("rectified", lower(pars.Filtering.Name))
+            if contains("rectified", lower(pars.Filtering.Name)) || pars.Filtering.Subtract_Cross_Trial_Mean
                 ylim(ax, [0, noise_bandwidth]);
             else
                 ylim(ax, [-noise_bandwidth, noise_bandwidth]);

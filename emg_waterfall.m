@@ -209,7 +209,7 @@ end
 if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
     pars.Filtering.Subtract_Cross_Trial_Mean = true;
     pars.Subtract_Mean = true;
-    X = X - mean(X,1); 
+    X = abs(X - mean(X,1)); 
 end
 
 M = size(X,2);

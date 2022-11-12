@@ -142,7 +142,7 @@ i_pre = t_sweep < pars.Pre_Stimulus_RMS_ms;
 i_post = t_sweep > pars.Post_Stimulus_RMS_ms;
 Zt = grid.triggered_array(Z', trigs, n_pre, n_post);
 if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
-    Zt = Zt - mean(Zt,3); 
+    Zt = abs(Zt - mean(Zt,3)); 
     pars.Filtering.Subtract_Cross_Trial_Mean = true;
     pars.Subtract_Mean = true;
 end
