@@ -62,7 +62,9 @@ pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
      pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
-
+if pars.Verbose
+    pars.Filtering.Verbose = pars.Verbose;
+end
 
 if (numel(ARRAY) > 1) || (numel(BLOCK) > 1)
     fig = gobjects(numel(BLOCK), numel(ARRAY));
@@ -133,7 +135,11 @@ if ~isnan(pars.N_Trials)
     end 
     trigs = trigs(trials);
 end
-[Z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
+if isempty(pars.Filtered_Data)
+    [Z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
+else
+    Z = pars.Filtered_Data;
+end
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
 n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then samples
 t_sweep = (-n_pre:n_post)/x.sample_rate * 1e3; % Convert from samples to seconds, then milliseconds
@@ -347,7 +353,7 @@ if isempty(pars.RMS_Response_Ratio_Threshold)
     pars.RMS_Response_Ratio_Threshold = round(RMS_Max_Response_Ratio/2);
 end
 
-stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
 [xg, yg] = meshgrid(1:8, (8:-1:1)');
 if isempty(pars.RMS_Response_Ratio_Threshold)
     pars.RMS_Response_Ratio_Threshold = 0.8 * ax.CLim(2);

@@ -46,6 +46,9 @@ pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
+if pars.Verbose
+    pars.Filtering.Verbose = pars.Verbose;
+end
 
 if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
     % Can only reach here if char arguments were given instead of x directly
@@ -149,15 +152,23 @@ else
 end
 
 if pars.EMG_Filters_Applied==true
-    z = data;
+    if isempty(pars.Filtered_Data)
+        z = data;
+    else
+        z = pars.Filtered_Data;
+    end
 else
     if pars.Blank_Stim
         pars.Filtering.Apply_Stim_Blanking = true;
     end
-    % Trigs is returned because the filtering function can exclude
-    % out-of-bounds trigger sample indices based on stim-artifact-rejection
-    % sample epoch width.
-    [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+    if isempty(pars.Filtered_Data)
+        % Trigs is returned because the filtering function can exclude
+        % out-of-bounds trigger sample indices based on stim-artifact-rejection
+        % sample epoch width.
+        [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+    else
+        z = pars.Filtered_Data;
+    end
 end
 
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
@@ -167,7 +178,7 @@ n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then sa
 z = z(CHANNEL,:);
 name = strrep(channels(CHANNEL).alternative_name, ' ', '');
 try
-    stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+    stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
     chan_name = sprintf('%s (%s)', strrep(stim.map.Muscles.(name), '_', '-'), name);
 catch
     chan_name = name;
@@ -214,7 +225,12 @@ else
 end
 
 % Scale them so that most values should be < 1.
-X = zscore(X, 0, 'all')./pars.Scale_Factor + (1:N)';
+if strcmpi(pars.Filtering.Name, "Rectified") || pars.Subtract_Mean
+%     X = X./max(abs(X),[],2) + (1:N)';
+    X = X./(pars.Scale_Factor*2) + (1:N)';
+else
+    X = zscore(X, 0, 'all')./pars.Scale_Factor + (1:N)';
+end
 
 if isempty(pars.Series)
     pars.Series = 1:N;

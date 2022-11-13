@@ -58,6 +58,9 @@ pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
     pars.Filtering = get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
+if pars.Verbose
+    pars.Filtering.Verbose = pars.Verbose;
+end
 
 if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
     % Can only reach here if char arguments were given instead of x directly
@@ -156,12 +159,20 @@ else
 end
 
 if pars.EMG_Filters_Applied==true
-    z = data;
+    if isempty(pars.Filtered_Data)
+        z = data;
+    else
+        z = pars.Filtered_Data;
+    end
 else
-    % Trigs is returned because the filtering function can exclude
-    % out-of-bounds trigger sample indices based on stim-artifact-rejection
-    % sample epoch width.
-    [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+    if isempty(pars.Filtered_Data)
+        % Trigs is returned because the filtering function can exclude
+        % out-of-bounds trigger sample indices based on stim-artifact-rejection
+        % sample epoch width.
+        [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+    else
+        z = pars.Filtered_Data;
+    end
 end
 
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples

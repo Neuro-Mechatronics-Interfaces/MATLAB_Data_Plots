@@ -111,10 +111,14 @@ if pars.Filtering.Apply_Virtual_Reference
 else
     tmp = false;
 end
-% Trigs is returned because the filtering function can exclude
-% out-of-bounds trigger sample indices based on stim-artifact-rejection
-% sample epoch width.
-[z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+if isempty(pars.Filtered_Data)
+    % Trigs is returned because the filtering function can exclude
+    % out-of-bounds trigger sample indices based on stim-artifact-rejection
+    % sample epoch width.
+    [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(data, pars.Filtering, x.sample_rate, trigs, stops);
+else
+    z = pars.Filtered_Data;
+end
 pars.Filtering.Apply_Virtual_Reference = tmp; % Revert
 if (isnan(pars.N_Rows)) || (isnan(pars.N_Columns))
     L = tiledlayout(fig, 'flow');
@@ -133,7 +137,7 @@ if isinf(pars.End_Linear_Fit)
 else
     i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit 
 end
-stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK);
+stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
 ax = [];
 if pars.Filtering.Apply_Stim_Blanking
     i_pre = 1:(n_pre-pars.Filtering.Stim_Blanking_Epoch(1));

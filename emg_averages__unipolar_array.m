@@ -86,12 +86,14 @@ if ~isnan(pars.N_Trials)
     end 
     trigs = trigs(trials);
 end
-
-% Trigs is returned because the filtering function can exclude
-% out-of-bounds trigger sample indices based on stim-artifact-rejection
-% sample epoch width.
-[z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
-
+if isempty(pars.Filtered_Data)
+    % Trigs is returned because the filtering function can exclude
+    % out-of-bounds trigger sample indices based on stim-artifact-rejection
+    % sample epoch width.
+    [z, ~, pars.Filtering, trigs] = utils.apply_emg_filters(x, pars.Filtering, x.sample_rate, trigs, stops);
+else
+    z = pars.Filtered_Data;
+end
 L = tiledlayout(fig, 8, 8);
 
 % Set up axes labeling. Only label the bottom row and left column.

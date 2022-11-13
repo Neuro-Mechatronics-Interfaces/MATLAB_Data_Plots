@@ -7,18 +7,19 @@ function varargout = parameters(varargin)
 % See also: Contents
 
 pars = struct;
-VERSION = "2.3.0";
+VERSION = "2.5.0";
 
 %% For emg_averages
 pars.emg_averages = struct;
 pars.emg_averages.Acquisition_Type = "TMSi";
 pars.emg_averages.Anonymize = true;
 pars.emg_averages.Blank_Stim = false;
-pars.emg_averages.Data = [];
+pars.emg_averages.Data = []; % If provided, skips re-loading the Data objects
 pars.emg_averages.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
 pars.emg_averages.End_Linear_Fit = inf; % Set to some value in milliseconds to say when linear fit should end
 pars.emg_averages.Filtering = utils.get_default_filtering_pars(pars.emg_averages.Acquisition_Type, pars.emg_averages.EMG_Type, "Rectified"); % Return default filtering struct
 pars.emg_averages.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
+pars.emg_averages.Filtered_Data = []; % If this is provided, skips the `utils.apply_emg_filters` step.
 pars.emg_averages.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
 pars.emg_averages.Linear_Fit_Order = 1; % For Subtract_Linear_Fit polynomial detrend that is applied to individual trials (DIFFERENT FROM APPLY_POLYNOMIAL_DETREND IN APPLY_EMG_FILTERS)
 pars.emg_averages.Link_Axes = false;  % Set false to al axes limits to adaptively set independently
@@ -40,6 +41,7 @@ pars.emg_averages.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
 pars.emg_averages.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_averages.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_averages.Version = VERSION;
+pars.emg_averages.Verbose = false;
 
 %% For emg_stack
 pars.emg_stack = struct;
@@ -53,6 +55,7 @@ pars.emg_stack.EMG_Filters_Applied = false;
 pars.emg_stack.EMG_Type = "Array"; % Can be: "Array" | "Bipolar"
 pars.emg_stack.Filtering = utils.get_default_filtering_pars(pars.emg_stack.Acquisition_Type, pars.emg_stack.EMG_Type, "Rectified"); % Return default filtering struct
 pars.emg_stack.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
+pars.emg_stack.Filtered_Data = []; % If this is provided, skips the `utils.apply_emg_filters` step.
 pars.emg_stack.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
 pars.emg_stack.Inverted_Logic = true; % Set true to indicate that sync bit logic is inverted (default) or false if it is non-inverted.
 pars.emg_stack.N_Rows = nan; % Number of rows in grid layout
@@ -68,6 +71,7 @@ pars.emg_stack.T = [-60, 60]; % Time for epochs (milliseconds)
 pars.emg_stack.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
 pars.emg_stack.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_stack.Version = VERSION;
+pars.emg_stack.Verbose = false;
 
 
 %% For emg_rms
@@ -80,6 +84,7 @@ pars.emg_rms.Data = [];
 pars.emg_rms.Debug = false;
 pars.emg_rms.File_Type = ".mat"; % Can be ".mat" | ".poly5"
 pars.emg_rms.Filtering = utils.get_default_filtering_pars(pars.emg_rms.Acquisition_Type, pars.emg_rms.EMG_Type, "Rectified"); % Return default filtering struct
+pars.emg_rms.Filtered_Data = []; % If this is provided, skips the `utils.apply_emg_filters` step.
 pars.emg_rms.Axes = [];
 [pars.emg_rms.Output_Root, pars.emg_rms.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
 pars.emg_rms.N_Trials = nan;
@@ -95,6 +100,7 @@ pars.emg_rms.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_rms.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_rms.CLim = []; % If empty, use autoscale, otherwise, fixed scale
 pars.emg_rms.Version = VERSION;
+pars.emg_rms.Verbose = false;
 
 %% For emg_waterfall
 pars.emg_waterfall = struct;
@@ -112,6 +118,7 @@ pars.emg_waterfall.Figure_Title = 'Waterfall';
 pars.emg_waterfall.File_Type = ".mat"; % Can be: ".mat" | ".poly5"
 pars.emg_waterfall.Filtering = utils.get_default_filtering_pars("TMSi","Array","Raw", ...
     'Apply_Virtual_Reference',true,"Apply_HPF",true,"HPF_Cutoff_Frequency",2,"HPF_Order",2); % Return default filtering struct
+pars.emg_waterfall.Filtered_Data = []; % If this is provided, skips the `utils.apply_emg_filters` step.
 pars.emg_waterfall.Font = {'FontName', 'Tahoma', 'FontSize', 18, 'Color', 'k'};
 pars.emg_waterfall.Inverted_Logic = false;
 % pars.emg_waterfall.N_Individual_Max = 10; % Max. number of individual traces to superimpose
@@ -133,6 +140,7 @@ pars.emg_waterfall.C_Lim = []; % If empty, use auto-scale, otherwise, fixed scal
 pars.emg_waterfall.X_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_waterfall.Y_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_waterfall.Z_Lim = []; % If empty, use auto-scale, otherwise, fixed scale.
+pars.emg_waterfall.Verbose = false;
 
 %% For impedances
 % Impedance parameters
@@ -142,6 +150,7 @@ pars.impedance.AxLim = [0.5 8.5];
 pars.impedance.Colormap = cm.map('greenred'); % Like TMSi one
 pars.impedance.Colorscale = 'log';
 pars.impedance.Version = VERSION;
+pars.impedance.Verbose = false;
 
 %% Handle parsing
 N = numel(varargin);

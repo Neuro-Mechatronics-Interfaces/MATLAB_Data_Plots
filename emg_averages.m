@@ -75,6 +75,9 @@ pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
      pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
+if pars.Verbose
+    pars.Filtering.Verbose = pars.Verbose;
+end
 
 if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
     if nargout < 1  % Then ensure we do not change "nargout" for actual implementation.
