@@ -78,7 +78,7 @@ if (numel(BLOCK) > 1) || (numel(ARRAY) > 1)
 end
 
 if ~(isa(x,'TMSiSAGA.Data') || isa(x, 'struct')) && isempty(pars.Trigger_Data)
-    x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+    x = io.load_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
     data_in = x.samples;
     pars.Sample_Rate = x.sample_rate;
     if isempty(x)

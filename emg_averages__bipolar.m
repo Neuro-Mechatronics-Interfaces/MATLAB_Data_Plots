@@ -27,7 +27,7 @@ end
 if ~isempty(pars.Data)
     x = pars.Data;
 else
-    x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
+    x = io.load_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
 end
 if isempty(x)
     fig = gobjects(1);

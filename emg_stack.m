@@ -69,7 +69,7 @@ end
 if ~isempty(pars.Data)
     x = pars.Data;
 else
-    x = io.load_tmsi(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type);
+    x = io.load_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type);
 end
 
 if numel(CHANNEL) > 1
