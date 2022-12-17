@@ -9,6 +9,7 @@ function fig = raster(data, varargin)
 %           denoting the time from the start of the record where there was
 %           an event (such as MUAP or Spike) of interest.
 %   varargin - (Optional) 'Name',value input argument pairs.
+%         + 'BackgroundColor' | 'w' | Color in background of figure/axes.
 %         + 'CData' | [] | If empty then uses 'jet' colormap for pulse coloring
 %               (or colormap specified in Colormap parameter; otherwise, give as
 %                n x 3 array of colors where n is number of cells in `data`)
@@ -26,6 +27,8 @@ function fig = raster(data, varargin)
 %         + 'ReferenceLabels' | {} | Reference signal label(s)
 %         + 'SampleRate' | 4000 |  Default from TMSi recordings
 %         + 'Title' | '' | Title of figure and axes
+%         + 'UserData' | struct | UserData property of the returned figure handle.
+%         + 'YLabel' | '(pulse train)' | YLabel text
 %         + 'XLim' | [] | The x-limits set manually on figure axes.
 %
 % Output:
@@ -34,6 +37,7 @@ function fig = raster(data, varargin)
 % See also: Contents, +ckc
 
 p = inputParser;
+p.addParameter('BackgroundColor', 'w'); % Figure/axes background color
 p.addParameter('CData', []);
 p.addParameter('Colormap', @jet);
 p.addParameter('Labels', '');
@@ -45,37 +49,77 @@ p.addParameter('ReferenceColor', [0.7, 0.7, 0.7]); % Color of lightest reference
 p.addParameter('ReferenceLabels', {});
 p.addParameter('SampleRate', 4000); % Default from TMSi recordings
 p.addParameter('Title', '');
+p.addParameter('UserData', struct);
+p.addParameter('YLabel', '(pulse train)');
 p.addParameter('XLim', []); 
 p.parse(varargin{:});
 N = numel(data);
 
 if isempty(p.Results.Title)
-    namestr = 'Raster';
+    namestr = {'Pulse Trains'};
 else
-    namestr = sprintf('Raster: %s', p.Results.Title);
+    if iscell(p.Results.Title)
+        namestr = p.Results.Title;
+    else
+        if isa(p.Results.Title, 'char')
+            namestr = {p.Results.Title};
+        elseif isa(p.Results.Title, 'string')
+            namestr = p.Results.Title;
+        else
+            error("Invalid type (%s) for parameter 'Title' (should be char, string, or cell).", class(p.Results.Title));
+        end
+    end
+end
+
+% Set cdata for each pulse train
+if isempty(p.Results.CData)
+    cdata = feval(p.Results.Colormap, N);
+else
+    cdata = p.Results.CData;
 end
 
 fig = figure(...
-    'Name', namestr, ...
-    'Color', 'w', ...
-    'Position', p.Results.Position);
+    'Name', sprintf('Raster: %s', namestr{1}), ...
+    'Color', p.Results.BackgroundColor, ...
+    'Position', p.Results.Position, ...
+    'UserData', p.Results.UserData);
 ax = axes(fig, ...
     'NextPlot', 'add', ...
     'FontName', 'Tahoma', ...
-    'XColor', 'k', 'YColor', 'k', ...
+    'Color', p.Results.BackgroundColor, ...
+    'XColor', 'k', ...
+    'YColor', 'k', ...
     'YTick', 1:N, ...
     'YLim', [0.5, N+0.5], ...
     'YTickLabelRotation', 30, ...
     'Box', 'on');
 xlabel(ax, 'Time (ms)', 'FontName', 'Tahoma', 'Color', 'k');
-title(ax, namestr, 'FontName', 'Tahoma', 'Color', 'k');
-if isempty(p.Results.Labels)
-    ylabel(ax, '(Pulse Train)', ...
+title(ax, namestr{:}, 'FontName', 'Tahoma', 'Color', 'k');
+ylabel(ax, p.Results.YLabel, ...
         'FontName', 'Tahoma', ...
         'FontSize', 10, ...
         'Color', [0.75 0.75 0.75]);
-else
+if ~isempty(p.Results.Labels)
     ax.YTickLabels = p.Results.Labels;
+end
+if isnumeric(ax.YTickLabels(1)) || ischar(ax.YTickLabels(1))
+    tmp = strings(size(ax.YTickLabels));
+    for ii = 1:numel(ax.YTickLabels)
+        if isnumeric(ax.YTickLabels(ii))
+            tmp(ii) = sprintf('\\color[rgb]{%f,%f,%f}%g', cdata(ii,1), cdata(ii,2), cdata(ii,3), ax.YTickLabels(ii));
+        else
+            tmp(ii) = sprintf('\\color[rgb]{%f,%f,%f}%s', cdata(ii,1), cdata(ii,2), cdata(ii,3), ax.YTickLabels(ii));
+        end
+    end
+    ax.YTickLabels = tmp;
+else
+    for ii = 1:numel(ax.YTickLabels)
+        if iscell(ax.YTickLabels(ii))
+            ax.YTickLabels{ii} = sprintf('\\color[rgb]{%f,%f,%f}%s', cdata(ii,1), cdata(ii,2), cdata(ii,3), ax.YTickLabels{ii});
+        else
+            ax.YTickLabels(ii) = sprintf('\\color[rgb]{%f,%f,%f}%s', cdata(ii,1), cdata(ii,2), cdata(ii,3), ax.YTickLabels(ii));
+        end
+    end
 end
 
 fs = p.Results.SampleRate * 1e-3; % Sample rate, but samples per millisecond
@@ -134,19 +178,18 @@ else
     hh = p.Results.PulseHeight;
 end
 
-% Set cdata for each pulse train
-if isempty(p.Results.CData)
-    cdata = feval(p.Results.Colormap, N);
-else
-    cdata = p.Results.CData;
-end
-
 for ii = 1:N
-    ts = sort(data{ii} ./ fs, 'ascend');
-    n = numel(ts);
-    ts = reshape(ts, 1, n);
-    xl = [min(xl(1), ts(1)), max(xl(2), ts(end))];
-    xts = [repmat(ts, 2, 1); nan(1, n)];
+    n = numel(data{ii});
+    if n == 0
+        xts = nan(3,1);
+        n = 1; % "Pretend" so that we can put a hidden graphic object as placeholder.
+    else
+        ts = sort(data{ii} ./ fs, 'ascend');
+        ts = reshape(ts, 1, n);
+        xl = [min(xl(1), ts(1)), max(xl(2), ts(end))];
+        xts = [repmat(ts, 2, 1); ...
+               nan(1, n)]; % "Hack" to use NaN for separating the lines.
+    end
     if iscell(hh(ii))
         hhh = hh{ii} ./ 2;
     else
@@ -154,7 +197,7 @@ for ii = 1:N
     end
     yts = [ones(1,n).*(ii-hhh); ...
            ones(1,n).*(ii+hhh); ...
-           nan(1, n)];
+            nan(1,n)]; % "Hack" to use NaN for separating the lines.
     hl = line(ax, xts(:), yts(:), ...
         'Color', cdata(ii,:), ...
         'LineWidth', p.Results.PulseLineWidth);
