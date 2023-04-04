@@ -228,7 +228,11 @@ if pars.Link_Axes
 % else
 %     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
-str = utils.get_filtering_label_string(pars.Filtering);
+if isstring(pars.Figure_Process_Title) || ischar(pars.Figure_Process_Title)
+    str = pars.Figure_Process_Title;
+else
+    str = utils.get_filtering_label_string(pars.Filtering);
+end
 N = numel(trigs);
 if pars.Anonymize
     tmp = strsplit(block, '_');
