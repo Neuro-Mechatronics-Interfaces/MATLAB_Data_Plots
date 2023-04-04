@@ -5,7 +5,7 @@ function fig = emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, va
 %   fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin);
 %
 % This should be accessed via `"Array"` EMG_Type parameter in
-% `plot.emg_averages`. 
+% `plot.emg_averages`.
 %
 % See also: Contents, plot.emg_averages
 
@@ -22,7 +22,7 @@ end
 % Handle parsing of `pars`
 pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
-     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+    pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 if isempty(pars.Data)
     x = io.load_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.File_Type, pars.Input_Root);
@@ -51,12 +51,6 @@ if isnan(pars.Sync_Bit)
     if exist(sync_data_in_file, 'file')==0
         error('Plot:Sync', 'No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
     end
-    in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
-    stops = in.onset;
-    trigs = in.offset;
-    triggers = in.sync_data;
-else
-    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 if (numel(trigs) < 1) || (numel(stops) < 1)
     warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
@@ -116,7 +110,7 @@ i_start_fit = find(t_sweep >= pars.Start_Linear_Fit, 1, 'first'); % Sample index
 if isinf(pars.End_Linear_Fit)
     i_end_fit = numel(t_sweep);
 else
-    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit 
+    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit
 end
 noise_bandwidth = 1e-6; % Compute noise bandwidth
 
@@ -160,7 +154,7 @@ for ich = 1:64
     A = mean(X, 1);
     if size(X, 2) ~= numel(t_sweep)
         warning('Timing mismatch - block skipped.');
-        delete(fig); 
+        delete(fig);
         fig = gobjects(1);
         return;
     end
@@ -186,15 +180,15 @@ for ich = 1:64
     end
     if pars.Style == "Individual"
         if size(X, 1) > pars.N_Individual_Max
-             X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
-             if ich == 1 % Only mention this one time.
+            X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
+            if ich == 1 % Only mention this one time.
                 fprintf(1, '\t->\tSuperimposing %d individual traces...\n', pars.N_Individual_Max);
-             end
-        end 
+            end
+        end
     end
     T(T > 0) = max(max(X));
     if pars.Plot_Stim_Period
-        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt)); 
+        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     end
     if pars.Style == "Individual"
         plot(ax, t_sweep, X, ...
@@ -205,7 +199,7 @@ for ich = 1:64
             ylim(ax, [min(X(:, t_sweep > 12.5), [], 'all'), max(X(:, t_sweep > 12.5), [], 'all')]); 
         end
     else
-        faceData = [1:(2*numel(A)), 1]; 
+        faceData = [1:(2*numel(A)), 1];
         xx = t_sweep(:);
         xx = [xx; flipud(xx)]; %#ok<AGROW>
         yy = A(:);
@@ -221,14 +215,18 @@ for ich = 1:64
     plot(ax, t_sweep, A, 'LineWidth', 2, 'Color', 'k', ...
         'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt), ...
         'Tag', 'STA');  % Plot X for the individual ones
-    
+
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
 % else
 %     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
-str = utils.get_filtering_label_string(pars.Filtering);
+if isstring(pars.Figure_Process_Title) || ischar(pars.Figure_Process_Title)
+    str = pars.Figure_Process_Title;
+else
+    str = utils.get_filtering_label_string(pars.Filtering);
+end
 N = numel(trigs);
 if pars.Anonymize
     tmp = strsplit(block, '_');

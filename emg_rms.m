@@ -350,7 +350,7 @@ else
     RMS_Max_Response_Ratio = max(max(Z_ratio));
 end
 if isempty(pars.RMS_Response_Ratio_Threshold)
-    pars.RMS_Response_Ratio_Threshold = round(RMS_Max_Response_Ratio/2);
+    pars.RMS_Response_Ratio_Threshold = RMS_Max_Response_Ratio/2;
 end
 
 stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
