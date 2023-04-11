@@ -227,7 +227,7 @@ end
 % Scale them so that most values should be < 1.
 if strcmpi(pars.Filtering.Name, "Rectified") || pars.Subtract_Mean
 %     X = X./max(abs(X),[],2) + (1:N)';
-    X = X./(pars.Scale_Factor*2) + (1:N)';
+    X = -X./(pars.Scale_Factor*2) + (1:N)'; % Y-axis has Trial 1 at top, so it is reversed. Match the sign-convention change to make rectification look like expected.
 else
     X = zscore(X, 0, 'all')./pars.Scale_Factor + (1:N)';
 end
