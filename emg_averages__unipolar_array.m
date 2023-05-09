@@ -51,6 +51,12 @@ if isnan(pars.Sync_Bit)
     if exist(sync_data_in_file, 'file')==0
         error('Plot:Sync', 'No sync data file (<strong>%s</strong>): must specify sync bit as non-NaN value!', sync_data_in_file);
     end
+    in = load(sync_data_in_file, 'onset', 'offset', 'sync_data');
+    stops = in.onset;
+    trigs = in.offset;
+    triggers = in.sync_data;
+else
+    [stops, trigs, triggers] = utils.parse_bit_sync(x, pars.Sync_Bit, gen_data_folder, pars.Inverted_Logic, pars.Trigger_Channel);
 end
 if (numel(trigs) < 1) || (numel(stops) < 1)
     warning("Empty sync vector (trigs): check if TTL on TRIGGERS channel was present/parsed using correct bit.");
