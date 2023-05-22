@@ -5,7 +5,7 @@ function fig = emg_averages__bipolar(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 %   fig = plot.emg_averages__unipolar_array(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars);
 %
 % This should be accessed via `"Array"` EMG_Type parameter in
-% `plot.emg_averages`. 
+% `plot.emg_averages`.
 %
 % See also: Contents, plot.emg_averages
 
@@ -22,7 +22,7 @@ end
 pars = utils.parse_parameters(pars, varargin{:});
 
 if ~isstruct(pars.Filtering)
-     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+    pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 if ~isempty(pars.Data)
     x = pars.Data;
@@ -87,14 +87,16 @@ if ~isnan(pars.N_Trials)
         trials = 1:pars.N_Trials;
     else
         trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
-    end 
+    end
     trigs = trigs(trials);
 end
-iBip = contains({channels.alternative_name}, 'BIP')' & (sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
+% The previous iBip enforced that the bipolar channels had data with samples greater than epsilon (1e-16)
+%iBip = contains({channels.alternative_name}, 'BIP')' & %(sum(abs(x.samples-mean(x.samples, 2)),2) > eps);
+iBip = contains({channels.alternative_name}, 'BIP')';
 if sum(iBip) == 0
     delete(fig);
     fig = gobjects(1);
-    fprintf(1, 'No BIPOLAR channels for recording: <strong>%s</strong>\n', block); 
+    fprintf(1, 'No BIPOLAR channels for recording: <strong>%s</strong>\n', block);
     return;
 else
     channels = channels(iBip);
@@ -123,9 +125,8 @@ pars.Filtering.Apply_Virtual_Reference = tmp; % Revert
 if (isnan(pars.N_Rows)) || (isnan(pars.N_Columns))
     L = tiledlayout(fig, 'flow');
 else
-    L = tiledlayout(fig, pars.N_Rows, pars.N_Columns); 
+    L = tiledlayout(fig, pars.N_Rows, pars.N_Columns);
 end
-
 
 n_pre = -1 * round(pars.T(1) * 1e-3 * x.sample_rate); % Convert to seconds, then samples
 n_post = round(pars.T(2) * 1e-3 * x.sample_rate);  % Convert to seconds, then samples
@@ -135,12 +136,12 @@ i_start_fit = find(t_sweep >= pars.Start_Linear_Fit, 1, 'first'); % Sample index
 if isinf(pars.End_Linear_Fit)
     i_end_fit = numel(t_sweep);
 else
-    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit 
+    i_end_fit = find(t_sweep <= pars.End_Linear_Fit, 1, 'last'); % Sample index to end linear fit
 end
 stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
 ax = [];
 if pars.Filtering.Apply_Stim_Blanking
-    i_pre = 1:(n_pre-pars.Filtering.Stim_Blanking_Epoch(1));
+    i_pre = 1:(n_pre-round(pars.Filtering.Stim_Blanking_Epoch(1) * 1e-3 * x.sample_rate));
 else
     i_pre = 1:n_pre;
 end
@@ -150,7 +151,7 @@ if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
     pars.Subtract_Mean = true;
 end
 for iCh = 1:sum(iBip)
-    
+
     % Trigs is returned because the averaging function can exclude
     % out-of-bounds trigger sample indices based on snippet
     % sampling epoch width (samples pre- and post-TTL marker).
@@ -160,7 +161,7 @@ for iCh = 1:sum(iBip)
         continue;
     end
     if pars.Subtract_Mean
-        X = abs(X - mean(X,1)); 
+        X = abs(X - mean(X,1));
     end
     if pars.Subtract_Linear_Fit
         X = X'; % Transpose so columns are trials.
@@ -171,13 +172,13 @@ for iCh = 1:sum(iBip)
         X = max(X - mean(X(:, i_pre), 2), zeros(size(X)));
     end
     if pars.Filtering.Apply_Pre_Stimulus_Normalization
-        X = X./std(X,0,2); 
+        X = X./std(X,0,2);
     end
     A = mean(X,1);
     ax = nexttile(L);
     if size(X, 2) ~= numel(t_sweep)
         warning('Timing mismatch - block skipped.');
-        delete(fig); 
+        delete(fig);
         fig = gobjects(1);
         return;
     end
@@ -199,15 +200,15 @@ for iCh = 1:sum(iBip)
     end
     if pars.Style == "Individual"
         if size(X, 1) > pars.N_Individual_Max
-             X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
-             if iCh == 1 % Only mention this one time.
+            X = X(randsample(size(X, 1), pars.N_Individual_Max), :);
+            if iCh == 1 % Only mention this one time.
                 fprintf(1, '\t->\tSuperimposing %d individual traces...\n', pars.N_Individual_Max);
-             end
-        end 
+            end
+        end
     end
     T(T > 0) = max(max(X));
     if pars.Plot_Stim_Period
-        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt)); 
+        stem(ax, t_sweep, T, 'LineWidth', 2, 'Color', 'r', 'Marker', 'none', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     end
     if pars.Style == "Individual"
         plot(ax, t_sweep, X, ...
@@ -215,7 +216,7 @@ for iCh = 1:sum(iBip)
             'Tag', 'Dispersion', ...
             'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
     else
-        faceData = [1:(2*numel(A)), 1]; 
+        faceData = [1:(2*numel(A)), 1];
         xx = t_sweep(:);
         xx = [xx; flipud(xx)]; %#ok<AGROW>
         yy = A(:);
@@ -254,7 +255,11 @@ else
     else
         linkaxes(findobj(L.Children, 'type', 'axes'), 'off'); % Share common limits.
     end
-    str = utils.get_filtering_label_string(pars.Filtering);
+    if ~isempty(pars.Process_Steps)
+        str = utils.get_ordered_filtering_label_string(pars.Process_Steps, pars.Filtering);
+    else
+        str = utils.get_filtering_label_string(pars.Filtering);
+    end
     N = numel(trigs);
     if pars.Anonymize
         tmp = strsplit(block, '_');

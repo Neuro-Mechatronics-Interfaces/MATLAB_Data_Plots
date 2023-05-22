@@ -75,17 +75,17 @@ if stops(1) < trigs(1)
     end
 end
 % Potentially select subset of trials to average
-if ~isnan(pars.N_Trials)
-    if pars.N_Trials(1) > numel(trigs)
-        pars.N_Trials(1) = numel(trigs);
-    end
-    if numel(pars.N_Trials) == 1
-        trials = 1:pars.N_Trials;
-    else
-        trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
-    end 
-    trigs = trigs(trials);
-end
+% if ~isnan(pars.N_Trials)
+%     if pars.N_Trials(1) > numel(trigs)
+%         pars.N_Trials(1) = numel(trigs);
+%     end
+%     if numel(pars.N_Trials) == 1
+%         trials = 1:pars.N_Trials;
+%     else
+%         trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+%     end
+%     trigs = trigs(trials);
+% end
 if isempty(pars.Filtered_Data)
     % Trigs is returned because the filtering function can exclude
     % out-of-bounds trigger sample indices based on stim-artifact-rejection
@@ -121,7 +121,7 @@ end
 noise_bandwidth = 1e-6; % Compute noise bandwidth
 
 if pars.Filtering.Apply_Stim_Blanking
-    i_pre = 1:(n_pre-pars.Filtering.Stim_Blanking_Epoch(1));
+    i_pre = 1:(n_pre-round(pars.Filtering.Stim_Blanking_Epoch(1) * 1e-3 * x.sample_rate));
 else
     i_pre = 1:n_pre;
 end
@@ -139,10 +139,33 @@ for ich = 1:64
     % out-of-bounds trigger sample indices based on snippet
     % sampling epoch width (samples pre- and post-TTL marker).
     [~, X, trigs] = math.triggered_average(trigs, z(ich, :), n_pre, n_post, false, false, false);
-    if pars.Subtract_Mean
-        X = abs(X - mean(X,1)); 
-    end
     T = math.triggered_average(trigs, triggers, n_pre, n_post, false, false, false);
+
+    if pars.SNR_Sort
+        % Use the RMS parameters to determing window after stim artifact
+        post_stim_n_pre = round(pars.T_RMS(1) * 1e-3 * x.sample_rate) + abs(n_pre); % Convert to seconds, then samples
+        result = arrayfun(@(ROWIDX) max(X(ROWIDX,post_stim_n_pre:n_post)), (1:size(X,1)).');
+        [~,I] = sort(result);
+        X = X(I,:); % trials are now arranged by highest response amplitude to lowest in descending order
+    end
+
+    % Potentially select subset of trials to average
+    if ~isnan(pars.N_Trials)
+        if pars.N_Trials(1) > numel(trigs)
+            pars.N_Trials(1) = numel(trigs);
+        end
+        if numel(pars.N_Trials) == 1
+            trials = 1:pars.N_Trials;
+        else
+            trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
+        end
+        trigs = trigs(trials);
+        X = X(trials,:);
+    end
+
+    if pars.Subtract_Mean
+        X = abs(X - mean(X,1));
+    end
     if pars.Subtract_Linear_Fit
         X = X'; % Transpose so columns are trials.
         X(i_start_fit:i_end_fit, :) = detrend(X(i_start_fit:i_end_fit, :), pars.Linear_Fit_Order);
@@ -152,10 +175,10 @@ for ich = 1:64
         X = max(X - mean(X(:, i_pre), 2), zeros(size(X)));
     end
     if pars.Filtering.Apply_Max_Rescale
-        X = X./max(max(abs(X))); 
+        X = X./max(max(abs(X)));
     end
     if pars.Filtering.Apply_Pre_Stimulus_Normalization
-        X = X./std(X,0,2); 
+        X = X./std(X,0,2);
     end
     A = mean(X, 1);
     if size(X, 2) ~= numel(t_sweep)
@@ -202,7 +225,7 @@ for ich = 1:64
             'Tag', 'Dispersion', ...
             'LineStyle', ':', 'ButtonDownFcn', @(src, evt)callback.handleAxesClick(src.Parent, evt));
         if isempty(pars.YLim)
-            ylim(ax, [min(X(:, t_sweep > 12.5), [], 'all'), max(X(:, t_sweep > 12.5), [], 'all')]); 
+            ylim(ax, [min(X(:, t_sweep > 12.5), [], 'all'), max(X(:, t_sweep > 12.5), [], 'all')]);
         end
     else
         faceData = [1:(2*numel(A)), 1];
@@ -225,13 +248,18 @@ for ich = 1:64
 end
 if pars.Link_Axes
     linkaxes(findobj(L.Children, 'type', 'axes'), 'xy'); % Share common limits.
-% else
-%     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
+    % else
+    %     linkaxes(findobj(L.Children, 'type', 'axes'), 'off');
 end
-if isstring(pars.Figure_Process_Title) || ischar(pars.Figure_Process_Title)
-    str = pars.Figure_Process_Title;
+if ~isempty(pars.Process_Steps) && ~isempty(pars.Filtered_Data)
+    str = utils.get_ordered_filtering_label_string(pars.Process_Steps, pars.Filtering);
 else
-    str = utils.get_filtering_label_string(pars.Filtering);
+    if iscell(pars.Process_Steps) && ~isempty(pars.Filtered_Data)
+        fprintf('Warning, empty cell passed for filter processes. No filters shown on figure\n')
+        str = '';
+    else
+        str = utils.get_filtering_label_string(pars.Filtering);
+    end
 end
 N = numel(trigs);
 if pars.Anonymize

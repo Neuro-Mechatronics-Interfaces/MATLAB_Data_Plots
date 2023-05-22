@@ -30,6 +30,7 @@ pars.emg_averages.N_Columns = nan; % Number of columns in grid layout
 pars.emg_averages.N_Trials = nan;
 [pars.emg_averages.Output_Root, pars.emg_averages.Input_Root] = parameters('generated_data_folder', 'raw_data_folder'); % Location where output figures are saved.
 pars.emg_averages.Plot_Stim_Period = true; % Plot stim artifact with red stem lines?
+pars.emg_averages.SNR_Sort = false; % rearrange the order of trials so responses with highest amplitudes are first
 pars.emg_averages.Style = "Shaded"; % Can be: "Shaded" | "Individual"
 pars.emg_averages.Start_Linear_Fit = 4.75; % Start the linear fit subtraction (if Subtract_Linear_Fit is true) on or after the sample corresponding to this value (ms)
 pars.emg_averages.Subtract_Linear_Fit = false; % Set false to skip the linear-fit subtraction.
@@ -42,7 +43,7 @@ pars.emg_averages.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_averages.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_averages.Version = VERSION;
 pars.emg_averages.Verbose = false;
-pars.emg_averages.Figure_Process_Title = nan; % The substring in the figure title that displays the filtering processes used (accepts manual overwrite)
+pars.emg_averages.Process_Steps = []; % If empty, use original filtering method, otherwise, use ordered filtering steps according to single char element or cell array
 
 %% For emg_stack
 pars.emg_stack = struct;
@@ -73,7 +74,7 @@ pars.emg_stack.Trigger_Channel = 'TRIGGER'; % Name of Trigger Channel
 pars.emg_stack.XLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_stack.Version = VERSION;
 pars.emg_stack.Verbose = false;
-pars.emg_stack.Figure_Process_Title = nan; % The substring in the figure title that displays the filtering processes used (accepts manual overwrite)
+pars.emg_stack.Process_Steps = []; % If empty, use original filtering method, otherwise, use ordered filtering steps according to single char element or cell array
 
 %% For emg_rms
 pars.emg_rms = struct;
@@ -102,7 +103,7 @@ pars.emg_rms.YLim = []; % If empty, use auto-scale, otherwise, fixed scale
 pars.emg_rms.CLim = []; % If empty, use autoscale, otherwise, fixed scale
 pars.emg_rms.Version = VERSION;
 pars.emg_rms.Verbose = false;
-pars.emg_rms.Figure_Process_Title = nan; % The substring in the figure title that displays the filtering processes used (accepts manual overwrite)
+pars.emg_rms.Process_Steps = []; % If empty, use original filtering method, otherwise, use ordered filtering steps according to single char element or cell array
 
 %% For emg_waterfall
 pars.emg_waterfall = struct;
@@ -136,7 +137,7 @@ pars.emg_waterfall.Trigger_Data = [];
 pars.emg_waterfall.Trigger_Channel = 'TRIGGER';
 pars.emg_waterfall.View = [95, 65]; 
 pars.emg_waterfall.Version = VERSION;
-pars.emg_waterfall.Figure_Process_Title = nan; % The substring in the figure title that displays the filtering processes used (accepts manual overwrite)
+pars.emg_waterfall.Process_Steps = []; % If empty, use original filtering method, otherwise, use ordered filtering steps according to single char element or cell array
 
 % % % Color limits as well as axes limits % % %
 pars.emg_waterfall.C_Lim = []; % If empty, use auto-scale, otherwise, fixed scale
