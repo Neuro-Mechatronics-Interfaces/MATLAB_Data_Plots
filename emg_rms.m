@@ -8,7 +8,7 @@ function fig = emg_rms(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 % Example 1:
 %   % Run a single figure with default parameters.
 %   fig = plot.emg_rms('Frank', 2021, 11, 18, "A", 43);
-%   
+%
 % Example 2:
 %   % Export a batch run of average figures.
 %   plot.emg_rms('Frank', 2021, 11, 18, ["A", "B"], 0:105);
@@ -18,7 +18,7 @@ function fig = emg_rms(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, varargin)
 %   plot.emg_rms('Frank', ...
 %       2021, 12, 9, "B", 156, ...
 %       'T', [-22.5, 27.5], ... % Modifies epoch time (milliseconds)
-%       'Output_Root', 'G:\Shared drives\NML_NHP\DARPA_N3\preliminary'); % Change where figures are saved 
+%       'Output_Root', 'G:\Shared drives\NML_NHP\DARPA_N3\preliminary'); % Change where figures are saved
 %
 % Inputs:
 %   SUBJ  - Subject name (e.g. 'Frank' or "Frank")
@@ -53,14 +53,14 @@ if (numel(varargin) > 0) && isstruct(varargin{1})
     pars = varargin{1};
     varargin(1) = [];
 else
-    pars = plot.parameters('emg_rms'); 
+    pars = plot.parameters('emg_rms');
 end
 % % % END DEFAULT PARS STRUCT FIELD DEFINITIONS % % %
 
 % Handle parsing of `pars`
 pars = utils.parse_parameters(pars, varargin{:});
 if ~isstruct(pars.Filtering)
-     pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
+    pars.Filtering = utils.get_default_filtering_pars(pars.Acquisition_Type, pars.EMG_Type, pars.Filtering);
 end
 if pars.Verbose
     pars.Filtering.Verbose = pars.Verbose;
@@ -132,7 +132,7 @@ if ~isnan(pars.N_Trials)
         trials = 1:pars.N_Trials;
     else
         trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
-    end 
+    end
     trigs = trigs(trials);
 end
 if isempty(pars.Filtered_Data)
@@ -148,7 +148,7 @@ i_pre = t_sweep < pars.Pre_Stimulus_RMS_ms;
 i_post = t_sweep > pars.Post_Stimulus_RMS_ms;
 Zt = grid.triggered_array(Z', trigs, n_pre, n_post);
 if pars.Subtract_Mean || pars.Filtering.Subtract_Cross_Trial_Mean
-    Zt = abs(Zt - mean(Zt,3)); 
+    Zt = abs(Zt - mean(Zt,3));
     pars.Filtering.Subtract_Cross_Trial_Mean = true;
     pars.Subtract_Mean = true;
 end
@@ -164,7 +164,7 @@ if pars.Debug
         'Color', 'w', 'Units', 'Normalized', 'Position', [0.1 0.1 0.8 0.8]);
     db_L = tiledlayout(db_fig, 8, 8);
     iTile = flipud(reshape(1:64, 8, 8)');
-    
+
     db_t_pre = repmat(t_sweep(i_pre), 1, size(Zt, 3));
     db_t_pre = db_t_pre(:);
     db_t_post = repmat(t_sweep(i_post), 1, size(Zt, 3));
@@ -179,7 +179,7 @@ if pars.Debug
             'YTick', [0.01, 1, 100], 'YTickLabel', ["", "", ""], ...
             'UserData', struct('name', lab, 'filtering', pars.Filtering, 'block', block, 'data', squeeze(Zt(ii, :, :))'), ...
             'ButtonDownFcn', @cb.handleAxesClick);
-        
+
         db_tmp_pre = squeeze(Zt(ii, i_pre, :));
         scatter(db_ax, db_t_pre, db_tmp_pre(:), ...
             'DisplayName', 'Pre-Stim', ...
@@ -202,9 +202,9 @@ if pars.Debug
             text(db_ax, mean(db_t_pre), 0.01, 'E[RMS_p_r_e]',...
                 'BackgroundColor', 'k', ...
                 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
-                'Color', 'w', 'FontWeight', 'bold', 'FontSize', 8, 'FontName', 'Tahoma'); 
+                'Color', 'w', 'FontWeight', 'bold', 'FontSize', 8, 'FontName', 'Tahoma');
         end
-        
+
         db_tmp_post = squeeze(Zt(ii, i_post, :));
         scatter(db_ax, db_t_post, db_tmp_post(:), ...
             'DisplayName', 'Post-Stim', ...
@@ -227,15 +227,15 @@ if pars.Debug
             text(db_ax, mean(db_t_post), 100, 'E[RMS_p_o_s_t]',...
                 'BackgroundColor', 'k', ...
                 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', ...
-                'Color', 'w', 'FontWeight', 'bold', 'FontSize', 8, 'FontName', 'Tahoma'); 
+                'Color', 'w', 'FontWeight', 'bold', 'FontSize', 8, 'FontName', 'Tahoma');
         end
-        
+
         if rem(ii, 8) == 1
             xlabel(db_ax, 'ms', 'FontName', 'Tahoma', 'FontSize', 8, 'Color', 'k');
             set(db_ax, 'XTickLabel', db_ax.XTick);
         end
         if ceil(ii/8) == 1
-            ylabel(db_ax, '\muV', 'FontName', 'Tahoma', 'FontSize', 8, 'Color', 'k'); 
+            ylabel(db_ax, '\muV', 'FontName', 'Tahoma', 'FontSize', 8, 'Color', 'k');
             set(db_ax, 'YTickLabel', ["0.01", "1", "100"]);
         end
     end
@@ -248,13 +248,13 @@ end
 % Generate figure
 if isempty(pars.Axes)
     fig = figure('Name', 'RMS-Map',...
-             'Units','Normalized', ...
-             'Position',[0.1 0.1 0.8 0.8],...
-             'Color', 'w');
+        'Units','Normalized', ...
+        'Position',[0.1 0.1 0.8 0.8],...
+        'Color', 'w');
     ax = axes(fig, ...
-    'NextPlot', 'add', 'Color', 'r', ...
-    'XColor', 'k', 'YColor', 'k', 'FontName', 'Arial', 'FontSize', 16, ...
-    'YDir', 'normal', 'XTickLabel', 1:8:57, 'YTickLabel', 1:8);
+        'NextPlot', 'add', 'Color', 'r', ...
+        'XColor', 'k', 'YColor', 'k', 'FontName', 'Arial', 'FontSize', 16, ...
+        'YDir', 'normal', 'XTickLabel', 1:8:57, 'YTickLabel', 1:8);
 else
     fig = pars.Axes.Parent;
     if ~isa(fig, 'matlab.ui.Figure')
@@ -302,11 +302,20 @@ Z_ratio_q = interp2(X, Y, Z_ratio, Xq, Yq, 'spline');
 contourf(ax, xq, yq, Z_ratio_q, 'LineWidth', 2);
 
 if isempty(pars.CLim) && isempty(pars.RMS_Max_Response_Ratio)
-    pars.CLim = get(ax, 'CLim'); 
-    RMS_Max_Response_Ratio = pars.CLim(2); 
+    pars.CLim = get(ax, 'CLim');
+    RMS_Max_Response_Ratio = pars.CLim(2);
 end
 
-str = utils.get_filtering_label_string(pars.Filtering);
+if ~isempty(pars.Process_Steps)
+    str = utils.get_ordered_filtering_label_string(pars.Process_Steps, pars.Filtering);
+else
+    if iscell(pars.Process_Steps)
+        fprintf('Warning, empty cell passed for filter processes. No filters shown on figure\n')
+        str = '';
+    else
+        str = utils.get_filtering_label_string(pars.Filtering);
+    end
+end
 N = numel(trigs);
 if pars.Anonymize
     tmp = strsplit(block, '_');
@@ -352,7 +361,6 @@ end
 if isempty(pars.RMS_Response_Ratio_Threshold)
     pars.RMS_Response_Ratio_Threshold = RMS_Max_Response_Ratio/2;
 end
-
 stim = utils.get_tmsi_stim_data(SUBJ, YYYY, MM, DD, ARRAY, BLOCK, pars.Input_Root);
 [xg, yg] = meshgrid(1:8, (8:-1:1)');
 if isempty(pars.RMS_Response_Ratio_Threshold)
@@ -360,20 +368,24 @@ if isempty(pars.RMS_Response_Ratio_Threshold)
 end
 idx = find(Z_ratio >= pars.RMS_Response_Ratio_Threshold);
 if ~isempty(idx)
-     channels = flipud(reshape(1:64, 8, 8));
-     for ii = 1:numel(idx)
-          ch = channels(idx(ii));
-          chname = sprintf('UNI%02d', ch);
-          str = strrep(stim.map.Muscles.(chname), '_', ' ');
-          text(ax, xg(idx(ii)), yg(idx(ii)), str, ...
-              'FontName', 'Tahoma', ...
-              'FontSize', 10, ...
-              'FontWeight', 'bold', ...
-              'BackgroundColor', 'k', ...
-              'Color', 'w', ...
-              'HorizontalAlignment', 'center', ...
-              'VerticalAlignment', 'middle');
-     end
+    channels = flipud(reshape(1:64, 8, 8));
+    for ii = 1:numel(idx)
+        ch = channels(idx(ii));
+        chname = sprintf('UNI%02d', ch);
+        try
+            str = strrep(stim.map.Muscles.(chname), '_', ' ');
+        catch
+            str = chname;
+        end
+        text(ax, xg(idx(ii)), yg(idx(ii)), str, ...
+            'FontName', 'Tahoma', ...
+            'FontSize', 10, ...
+            'FontWeight', 'bold', ...
+            'BackgroundColor', 'k', ...
+            'Color', 'w', ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'middle');
+    end
 end
 cbar = colorbar(ax);
 cbar.Label.String = 'RMS_p_o_s_t/RMS_p_r_e';
@@ -400,14 +412,14 @@ if nargout < 1
     end
     out_name = fullfile(out_folder, sprintf('%s_%d_%d', block, round(pars.T(1)), round(pars.T(2))));
     default.savefig(fig, out_name, sprintf("%s_EMG", pars.EMG_Type), true);
-    
+
     out_folder_2 = fullfile(pars.Output_Root, SUBJ, tank, num2str(BLOCK));
     if exist(out_folder_2, 'dir') == 0
         try %#ok<TRYNC>
             mkdir(out_folder_2);
         end
     end
-    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_%s_EMG_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false); 
+    default.savefig(fig, fullfile(out_folder_2, block), sprintf('%d_%d_%s_EMG_%s', round(pars.T(1)), round(pars.T(2)), pars.EMG_Type, pars.Filtering.Name), false);
 end
 %default.savefig(fig, fullfile(gen_data_folder, x.name, sprintf('%d_%d_', round(pars.T(1)), round(pars.T(2))), 'RMS-Map_', pars.Filtering.Name), nargout > 0);
 end

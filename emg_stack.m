@@ -250,9 +250,18 @@ line(ax, ones(2,1) .* (ax.XLim(1) - 0.045 * diff(ax.XLim)), ...
     'Color', 'k', 'Tag', 'TrialOrder', 'LineWidth', 2.0, ...
     'MarkerSize', 16);
 xline(ax, 0, 'r:', "Stim", 'LineWidth', 1.5);
-% Generating figure title
-str = utils.get_filtering_label_string(pars.Filtering);
 
+% Generating figure title
+if ~isempty(pars.Process_Steps)
+    str = utils.get_ordered_filtering_label_string(pars.Process_Steps, pars.Filtering);
+else
+    if iscell(pars.Process_Steps)
+        fprintf('Warning, empty cell passed for filter processes. No filters shown on figure\n')
+        str = '';
+    else
+        str = utils.get_filtering_label_string(pars.Filtering);
+    end
+end
 if pars.Anonymize
     tmp = strsplit(block, '_');
     switch upper(string(SUBJ))
