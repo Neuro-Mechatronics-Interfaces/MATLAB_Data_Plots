@@ -59,6 +59,7 @@ arguments
     options.BoxColor (1,3) double {mustBeNumeric, mustBeInRange(options.BoxColor,0,1)} = [0 0 0];
     options.CloudEdgeColor (1,3) double {mustBeNumeric, mustBeInRange(options.CloudEdgeColor,0,1)} = [0 0 0];
     options.Parent = []
+    options.Support {mustBeTextScalar, mustBeMember(options.Support, {'unbounded', 'positive'})} = 'positive';
 end
 
 %% check all the inputs and if they do not exist then revert to default settings
@@ -80,7 +81,7 @@ band_width          = options.BandWidth;
 % calculate kernel density
 switch density_type
     case 'ks'
-        [f, Xi, u] = ksdensity(X, 'bandwidth', band_width);
+        [f, Xi, u] = ksdensity(X, 'Bandwidth', band_width, 'Support', options.Support);
         
     case 'rash'
         % must have https://github.com/CPernet/Robust_Statistical_Toolbox
