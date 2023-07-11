@@ -59,7 +59,8 @@ arguments
     options.BoxColor (1,3) double {mustBeNumeric, mustBeInRange(options.BoxColor,0,1)} = [0 0 0];
     options.CloudEdgeColor (1,3) double {mustBeNumeric, mustBeInRange(options.CloudEdgeColor,0,1)} = [0 0 0];
     options.Parent = []
-    options.Support {mustBeTextScalar, mustBeMember(options.Support, {'unbounded', 'positive'})} = 'positive';
+    options.Support (1,2) double = [-inf, inf];
+    options.Kernel {mustBeTextScalar, mustBeMember(options.Kernel, {'normal', 'box', 'triangle', 'epanechnikov'})} = 'normal';
 end
 
 %% check all the inputs and if they do not exist then revert to default settings
