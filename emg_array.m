@@ -113,12 +113,13 @@ if ~isempty(options.Reference)
     ax = nexttile(L, 4, [1 1]);
     c_data_ref = repmat(linspace(0,0.65,size(options.Reference,1))',1,3);
     set(ax, 'NextPlot','add','FontName','Tahoma','ColorOrder', c_data_ref);
-    plot(ax, t_data, options.Reference(:,mask));
+    plot(ax, t_data, options.Reference(:,t_mask));
     if strlength(options.RefTitle) > 0
         title(ax, options.RefTitle, 'FontName','Tahoma','Color',[0.35 0.35 0.35]);
     else
         title(ax, '(Reference)', 'FontName','Tahoma','Color',[0.35 0.35 0.35]);
     end
+    xlabel(ax, 'Time (s)', 'FontName','Tahoma','Color','k');
 end
 
 end
