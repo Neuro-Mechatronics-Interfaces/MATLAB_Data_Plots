@@ -40,7 +40,7 @@ else
 end
 
 if options.ApplyCommonReference
-    cref = mean(fdata,1);
+    cref = median(fdata,1);
 else
     cref = zeros(1,size(fdata,2));
 end
