@@ -26,6 +26,7 @@ function fig = raster(data, varargin)
 %         + 'ReferenceColor' | [0.7 0.7 0.7] | Color of lightest reference (or nRef x 3 array of colors for each reference line).
 %         + 'ReferenceLabels' | {} | Reference signal label(s)
 %         + 'SampleRate' | 4000 |  Default from TMSi recordings
+%         + 'SmoothKernelWidth', | 0.25 | Width of smoothing kernel (seconds) 
 %         + 'Title' | '' | Title of figure and axes
 %         + 'UserData' | struct | UserData property of the returned figure handle.
 %         + 'YLabel' | '(pulse train)' | YLabel text
@@ -48,6 +49,7 @@ p.addParameter('Reference', []); % Reference signal(s)
 p.addParameter('ReferenceColor', [0.7, 0.7, 0.7]); % Color of lightest reference (or nRef x 3 array of colors for each reference line).
 p.addParameter('ReferenceLabels', {});
 p.addParameter('SampleRate', 4000); % Default from TMSi recordings
+p.addParameter('SmoothKernelWidth', 0.250); % Smoothing kernel width (s)
 p.addParameter('Title', '');
 p.addParameter('UserData', struct);
 p.addParameter('YLabel', '(pulse train)');
@@ -90,10 +92,10 @@ ax = axes(fig, ...
     'XColor', 'k', ...
     'YColor', 'k', ...
     'YTick', 1:N, ...
-    'YLim', [0.5, N+0.5], ...
+    'YLim', [0.5, N+0.6], ...
     'YTickLabelRotation', 30, ...
     'Box', 'on');
-xlabel(ax, 'Time (ms)', 'FontName', 'Tahoma', 'Color', 'k');
+xlabel(ax, 'Time (s)', 'FontName', 'Tahoma', 'Color', 'k');
 title(ax, namestr{:}, 'FontName', 'Tahoma', 'Color', 'k');
 ylabel(ax, p.Results.YLabel, ...
         'FontName', 'Tahoma', ...
@@ -122,7 +124,7 @@ else
     end
 end
 
-fs = p.Results.SampleRate * 1e-3; % Sample rate, but samples per millisecond
+fs = p.Results.SampleRate; % Sample rate
 
 nRef = size(p.Results.Reference, 1);
 if nRef > 0
@@ -161,7 +163,7 @@ if nRef > 0
         end
     end
 else
-    XL = [inf, -inf];
+    XL = [-inf, inf];
     lRef = string({});
 end
 
@@ -198,9 +200,22 @@ for ii = 1:N
     yts = [ones(1,n).*(ii-hhh); ...
            ones(1,n).*(ii+hhh); ...
             nan(1,n)]; % "Hack" to use NaN for separating the lines.
+    xt = 0:(1/fs):(max(ts)+0.1);
+    xyt = zeros(size(xt));
+    xyt(data{ii}) = 1;
+    hhhy = mean(hhh(~isnan(hhh)));
+    xyt = conv(xyt, hann(round(p.Results.SmoothKernelWidth*fs)), 'same');
+    xyt = (xyt./max(xyt)).*(1-2*hhhy) + (ii+hhhy);
+
     hl = line(ax, xts(:), yts(:), ...
         'Color', cdata(ii,:), ...
         'LineWidth', p.Results.PulseLineWidth);
+    hl.Annotation.LegendInformation.IconDisplayStyle = 'off';
+
+    hl = line(ax, xt, xyt, ...
+        'Color', cdata(ii,:)*0.75, ...
+        'LineStyle', '-', ...
+        'LineWidth', p.Results.PulseLineWidth*1.5);
     hl.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 
