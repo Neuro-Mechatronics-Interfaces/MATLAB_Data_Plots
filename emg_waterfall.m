@@ -135,7 +135,7 @@ if ~isnan(pars.N_Trials)
     if pars.N_Trials(1) > numel(trigs)
         pars.N_Trials(1) = numel(trigs);
     end
-    if numel(pars.N_Trials) == 1
+    if isscalar(pars.N_Trials)
         trials = 1:pars.N_Trials;
     else
         trials = reshape(pars.N_Trials,1,numel(pars.N_Trials));
