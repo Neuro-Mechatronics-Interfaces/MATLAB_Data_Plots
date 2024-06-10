@@ -45,6 +45,8 @@ arguments
     options.LineOptions cell = {};
     options.FontName {mustBeTextScalar} = 'Tahoma';
     options.FontSize (1,1) double = 14;
+    options.XLabelRoundingLevel (1,1) {mustBeInteger} = 0;
+    options.YLabelRoundingLevel (1,1) {mustBeInteger} = 0;
     options.ZeroMarkerLabel {mustBeTextScalar} = 'Stim Onset';
     options.ZeroMarkerOptions cell = {};
 end
@@ -96,7 +98,9 @@ if options.AddScaleBar
     plot.add_scale_bar(ax,x0,0-options.YOffset/2,0,h0-options.YOffset/2, ...
         'XUnits',options.XUnits, ...
         'YUnits',options.YUnits, ...
-        'FontSize', options.FontSize-4);
+        'FontSize', options.FontSize-4, ...
+        'XLabelRoundingLevel', options.XLabelRoundingLevel, ...
+        'YLabelRoundingLevel', options.YLabelRoundingLevel);
 end
 
 if options.AddZeroMarker

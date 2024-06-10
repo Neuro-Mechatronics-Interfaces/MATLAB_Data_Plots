@@ -17,15 +17,17 @@ arguments
     options.YLabelScaleFactor = 1;
     options.FontSize = 12;
     options.FontName {mustBeTextScalar} = 'Tahoma';
+    options.XLabelRoundingLevel (1,1) {mustBeInteger} = 0;
+    options.YLabelRoundingLevel (1,1) {mustBeInteger} = 0;
 end
 % Add scalebar to plot
-dx = round(abs(x1 - x0).*options.XLabelScaleFactor)./options.XLabelScaleFactor;
+dx = round(abs(x1 - x0).*options.XLabelScaleFactor, options.XLabelRoundingLevel)./options.XLabelScaleFactor;
 x1 = x0 + dx;
-dy = round(abs(y1 - y0).*options.YLabelScaleFactor)./options.YLabelScaleFactor;
+dy = round(abs(y1 - y0).*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor;
 y1 = y0 + dy;
 
-tx = sprintf('%d %s', dx * options.XLabelScaleFactor, options.XUnits); % time scalebar text
-ty = sprintf('%d %s', dy * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
+tx = sprintf('%g %s', dx * options.XLabelScaleFactor, options.XUnits); % time scalebar text
+ty = sprintf('%g %s', dy * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
 h.XBar = line(ax, [x0, x0], [y0, y1], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
 h.YBar = line(ax, [x0, x1], [y0, y0], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
 h.YText = text(ax, x0-0.05*dx, y0+dy/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
