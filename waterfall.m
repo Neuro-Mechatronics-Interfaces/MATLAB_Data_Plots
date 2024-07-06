@@ -1,8 +1,8 @@
-function [fig, ax, h] = waterfall(t, Y, options)
+function [fig, ax, h, y0] = waterfall(t, Y, options)
 %WATERFALL Make 2D waterfall plot.
 %
 % Syntax:
-%   [fig, ax, h] = plot.waterfall(t, Y, 'Name', value, ...);
+%   [fig, ax, h, y0] = plot.waterfall(t, Y, 'Name', value, ...);
 %
 % Inputs:
 %   t - Independent variable values (e.g. timesteps or spatial position). 
@@ -25,6 +25,7 @@ function [fig, ax, h] = waterfall(t, Y, options)
 %   fig - Figure handle
 %   ax  - Parent axes handle
 %   h   - Array of line object handles. First element is "lowest" on y-axis.
+%   y0  - Y-offsets vector
 %
 % See also: Contents
 
@@ -32,6 +33,9 @@ arguments
     t (1,:) double
     Y (:,:) double
     options.Parent = [];
+    options.FigureName = 'Waterfall Plot';
+    options.FigureUnits = 'inches';
+    options.FigurePosition (1,4) double = [0.5 0.5 3.25 5];
     options.XUnits {mustBeTextScalar} = 'ms';
     options.YUnits {mustBeTextScalar} = 'µV';
     options.YScale = [];
@@ -39,6 +43,7 @@ arguments
     options.AddZeroMarker (1,1) logical = true;
     options.CData = [];
     options.YOffset (1,1) double = 100;
+    options.YClipping (1,1) logical = false;
     options.Title {mustBeTextScalar} = "";
     options.Subtitle {mustBeTextScalar} = "";
     options.LineWidth (1,1) double = 1.25;
@@ -49,6 +54,10 @@ arguments
     options.YLabelRoundingLevel (1,1) {mustBeInteger} = 0;
     options.ZeroMarkerLabel {mustBeTextScalar} = 'Stim Onset';
     options.ZeroMarkerOptions cell = {};
+end
+
+if size(Y,1)~=numel(t)
+    Y = Y';
 end
 
 if isempty(options.CData)
@@ -63,10 +72,10 @@ else
 end
 
 if isempty(options.Parent)
-    fig = figure('Name','Waterfall Plot', ...
+    fig = figure('Name',options.FigureName, ...
         'Color','w', ...
-        'Units','inches',...
-        'Position',[0.5 0.5 3.25 5]);
+        'Units',options.FigureUnits,...
+        'Position',options.FigurePosition);
     ax = axes(fig,...
         'NextPlot','add',...
         'FontName',options.FontName, ...
@@ -86,6 +95,9 @@ end
 ax.ColorOrder = cdata;
 
 y0 = 0:options.YOffset:((size(Y,2)-1)*options.YOffset);
+if options.YClipping
+    ylim(ax,[y0(1)-options.YOffset, y0(end)+options.YOffset]);
+end
 h = plot(ax,t,Y+y0, ...
     'LineWidth',options.LineWidth, ...
     options.LineOptions{:});
