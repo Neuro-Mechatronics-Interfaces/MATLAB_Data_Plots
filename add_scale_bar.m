@@ -6,10 +6,10 @@ function h = add_scale_bar(ax, x0, y0, x1, y1, options)
 
 arguments
     ax
-    x0 (1,1) double % Starting point of horizontal bar
-    y0 (1,1) double % Starting point of vertical bar
-    x1 (1,1) double % Ending point of horizontal bar
-    y1 (1,1) double % Ending point of vertical bar
+    x0 (1,1) % Starting point of horizontal bar
+    y0 (1,1) % Starting point of vertical bar
+    x1 (1,1) % Ending point of horizontal bar
+    y1 (1,1) % Ending point of vertical bar
     options.Color (1,3) double {mustBeInRange(options.Color,0,1)} = [0.65 0.65 0.65];
     options.XUnits = 'sec';
     options.XLabelScaleFactor = 1;
