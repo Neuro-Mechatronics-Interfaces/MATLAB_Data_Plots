@@ -21,13 +21,25 @@ arguments
     options.YLabelRoundingLevel (1,1) {mustBeInteger} = 0;
 end
 % Add scalebar to plot
-dx = round(abs(x1 - x0).*options.XLabelScaleFactor, options.XLabelRoundingLevel)./options.XLabelScaleFactor;
+dx = abs(x1 - x0);
+if ~isduration(dx)
+    dx = round(dx.*options.XLabelScaleFactor,options.XLabelRoundingLevel)./options.XLabelScaleFactor;
+    tx = sprintf('%g %s', dx * options.XLabelScaleFactor, options.XUnits); % time scalebar text
+else
+    dx = seconds(round(seconds(dx).*options.XLabelScaleFactor,options.XLabelRoundingLevel)./options.XLabelScaleFactor);
+    tx = sprintf('%g %s', seconds(dx) * options.XLabelScaleFactor, options.XUnits); % time scalebar text
+end
 x1 = x0 + dx;
-dy = round(abs(y1 - y0).*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor;
+dy = abs(y1 - y0);
+if ~isduration(dy)
+    dy = round(dy.*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor;
+    ty = sprintf('%g %s', dy * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
+else
+    dy = seconds(round(seconds(dy).*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor);
+    ty = sprintf('%g %s', seconds(dy) * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
+end
 y1 = y0 + dy;
 
-tx = sprintf('%g %s', dx * options.XLabelScaleFactor, options.XUnits); % time scalebar text
-ty = sprintf('%g %s', dy * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
 h.XBar = line(ax, [x0, x0], [y0, y1], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
 h.YBar = line(ax, [x0, x1], [y0, y0], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
 h.YText = text(ax, x0-0.05*dx, y0+dy/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
