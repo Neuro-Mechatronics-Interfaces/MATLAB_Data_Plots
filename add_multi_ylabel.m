@@ -1,5 +1,55 @@
 function h = add_multi_ylabel(ax, labels, options)
-%ADD_MULTI_YLABEL Adds multiple ylabels 
+%ADD_MULTI_YLABEL Adds multiple y-axis labels to an axis with customized alignment, color, spacing, and font options.
+%
+% Syntax:
+%   h = add_multi_ylabel(ax, labels, options)
+%
+% Description:
+%   This function adds multiple y-axis labels to the specified axis, `ax`, with customizable options for 
+%   alignment, color, font, and spacing. The labels can be aligned to either the left or right of the y-axis, 
+%   spaced evenly within a specified y-limit range or distributed between the bottom and top axis limits.
+%
+% Inputs:
+%   ax      - Handle to the axis to which labels will be added.
+%   labels  - String array of label names to add along the y-axis.
+%
+% Options:
+%   Color                - RGB color for each label, specified as either a single color (applied to all labels)
+%                          or a unique color for each label (default: [0 0 0] for black).
+%   Alignment            - Alignment side for labels: 'left' or 'right' (default: 'left').
+%   OffsetXDistanceFraction - Distance to offset labels along the x-axis, relative to the x-limits of `ax`.
+%                          Positive values place labels farther outside (default: 0.035).
+%   FontName             - Font for the labels (default: "Consolas").
+%   FontSize             - Font size for the labels (default: 8).
+%   FontOptions          - Cell array of additional font options applied to each label 
+%                          (e.g., {'FontWeight', 'bold'}, default: empty).
+%   Spacing              - Controls vertical spacing of labels:
+%                          'even' spaces labels from bottom to top with an even offset,
+%                          'between' spaces labels directly between the bottom and top limits (default: 'even').
+%   SpaceLim             - Limits for y-axis placement of the labels, specified as a two-element vector [min, max].
+%                          Default values use the axis y-limits.
+%
+% Output:
+%   h - Array of text object handles for each label.
+%
+% Example:
+%   % Set up axis and add multiple y-axis labels with default options
+%   ax = gca;
+%   labels = ["Label 1", "Label 2", "Label 3"];
+%   h = add_multi_ylabel(ax, labels);
+%
+%   % Customize y-axis labels with colors, right alignment, and larger font
+%   colors = [0 0.5 0; 0 0 1; 1 0 0]; % Green, Blue, Red
+%   h = add_multi_ylabel(ax, labels, 'Color', colors, 'Alignment', 'right', 'FontSize', 12);
+%
+%   % Add evenly spaced labels with custom y-axis limits and font options
+%   h = add_multi_ylabel(ax, labels, 'Spacing', 'between', 'SpaceLim', [0, 10], 'FontOptions', {'FontWeight', 'bold'});
+%
+% Notes:
+%   - Labels are rotated 90 degrees for vertical orientation.
+%   - If `Color` is specified with multiple rows, the number of rows must match the number of labels.
+%
+% See also: text, axes, linspace
 arguments
     ax (1,1)
     labels (1,:) string

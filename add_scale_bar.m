@@ -1,8 +1,59 @@
 function h = add_scale_bar(ax, x0, y0, x1, y1, options)
-%ADD_SCALE_BAR  Add scale bar to an existing axes
+%ADD_SCALE_BAR Adds a scale bar to an existing axis, with customizable units, color, and position.
 %
 % Syntax:
-%   h = plot.add_scale_bar(ax, x0, y0, x1, y1, 'Name', value, ...);
+%   h = add_scale_bar(ax, x0, y0, x1, y1, options)
+%
+% Description:
+%   This function adds a scale bar annotation to a specified axis, `ax`, allowing
+%   customizable labels, colors, and units for both horizontal and vertical bars.
+%   The function uses start and end points (`x0`, `y0`, `x1`, `y1`) to set the scale
+%   bar dimensions, and labels the bars based on specified units and scale factors.
+%
+% Inputs:
+%   ax  - Handle to the axis where the scale bar will be added.
+%   x0  - Starting x-coordinate of the horizontal scale bar.
+%   y0  - Starting y-coordinate of the vertical scale bar.
+%   x1  - Ending x-coordinate of the horizontal scale bar.
+%   y1  - Ending y-coordinate of the vertical scale bar.
+%
+% Options:
+%   Color                - RGB color for the scale bar lines and text (default: [0.65 0.65 0.65]).
+%   XBar                 - Logical to display the horizontal scale bar (default: true).
+%   XUnits               - String label for horizontal units (default: 'sec').
+%   XLabelScaleFactor    - Scaling factor for horizontal label values (default: 1).
+%   XLabelRoundingLevel  - Integer rounding precision for horizontal label values (default: 0).
+%   YBar                 - Logical to display the vertical scale bar (default: true).
+%   YUnits               - String label for vertical units (default: 'μV').
+%   YLabelScaleFactor    - Scaling factor for vertical label values (default: 1).
+%   YLabelRoundingLevel  - Integer rounding precision for vertical label values (default: 0).
+%   FontSize             - Font size for the scale bar labels (default: 12).
+%   FontName             - Font name for the scale bar labels (default: 'Tahoma').
+%
+% Outputs:
+%   h - Structure containing handles for each element of the scale bar:
+%       * h.XBar  - Handle for the horizontal bar line (if displayed).
+%       * h.XText - Handle for the horizontal bar label (if displayed).
+%       * h.YBar  - Handle for the vertical bar line (if displayed).
+%       * h.YText - Handle for the vertical bar label (if displayed).
+%
+% Example:
+%   % Create a plot and add a scale bar with default settings
+%   figure; ax = axes;
+%   plot(rand(10, 1)); % Example plot
+%   h = add_scale_bar(ax, 0.1, 0.1, 0.3, 0.5);
+%
+%   % Add a custom scale bar with specified colors, units, and labels
+%   h = add_scale_bar(ax, 0.1, 0.1, 0.4, 0.5, 'Color', [0 0 1], ...
+%                     'XUnits', 'ms', 'YUnits', 'mV', 'FontSize', 10, ...
+%                     'XLabelScaleFactor', 1000, 'YLabelScaleFactor', 1000);
+%
+% Notes:
+%   - The scale bar lengths are derived from the differences between `x0`, `x1` and `y0`, `y1`.
+%   - Units, scaling, and label rounding are customizable to accommodate various contexts.
+%   - Scale bar elements can be hidden by setting `XBar` or `YBar` options to false.
+%
+% See also: line, text, axes
 
 arguments
     ax
