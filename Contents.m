@@ -1,7 +1,13 @@
 % +PLOT  Package with code for generating different types of custom plots.
 %
+% Labeling Utilities
+%   add_multi_ylabel - Adds multiple y-axis labels to an axis with customized alignment, color, spacing, and font options.
+%   add_scale_bar - Adds a scale bar to an existing axis, with customizable units, color, and position.
+%   add_titles - Adds a title and subtitle to an axis with customizable font and color options.
+%
 % General Plotting Utilities
 %   correlation                    - Plot correlation (optionally specifying an axes handle)
+%   get_parent_figure              - Returns the parent figure even if it's not directly 'Parent' in the tree of the provided graphics object.
 %   parameters                     - Return parameters struct, which sets default values for things like epoch durations etc.
 %   raincloud                      - Plots a combination of half-violin, boxplot, and raw
 %   raster                         - Plot raster pulse trains from cell array of sample times

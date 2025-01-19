@@ -13,8 +13,14 @@ git submodule add git@github.com:Neuro-Mechatronics-Interfaces/MATLAB_Data_Plots
 ```
 
 ## Contents ##
+### Labeling Utilities ###
+ + [add_multi_ylabel](add_multi_ylabel.m) - Adds multiple y-axis labels to an axis with customized alignment, color, spacing, and font options.
+ + [add_scale_bar](add_scale_bar.m) - Adds a scale bar to an existing axis, with customizable units, color, and position.
+ + [add_titles](add_titles.m) - Adds a title and subtitle to an axis with customizable font and color options.
+
 ### General Plotting Utilities ###  
  + [correlation](correlation.m) - Plot correlation (optionally specifying an axes handle).  
+ + [get_parent_figure](get_parent_figure.m) - Returns the parent figure even if it's not directly 'Parent' in the tree of the provided graphics object.
  + [parameters](parameters.m) - Return parameters struct, which sets default values for things like epoch durations etc.  
  + [raincloud](raincloud.m) - Plots a combination of half-violin, boxplot, and raw.  
  + [raster](raster.m) - Plot raster pulse trains from cell array of sample times.  
