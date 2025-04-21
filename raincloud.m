@@ -44,7 +44,7 @@ function [fig, h, u] = raincloud(X, options)
 
 arguments
     X double {isnumeric}
-    options.Color (1,3) double {mustBeNumeric, mustBeInRange(options.Color, 0, 1)} = [0.5 0.5 0.5]
+    options.Color (:,3) double {mustBeNumeric, mustBeInRange(options.Color, 0, 1)} = turbo(16);
     options.BandWidth double {mustBeScalarOrEmpty} = []
     options.DensityType {mustBeTextScalar, mustBeMember(options.DensityType, {'ks', 'rash'})} = 'ks'
     options.Box (1,1) double {mustBeNumeric} = 0
@@ -57,7 +57,7 @@ arguments
     options.LineWidth (1,1) double {mustBeNumeric} = 2
     options.LowerBand (1,1) double {mustBeNumeric} = 1
     options.BoxColor (1,3) double {mustBeNumeric, mustBeInRange(options.BoxColor,0,1)} = [0 0 0];
-    options.CloudEdgeColor (1,3) double {mustBeNumeric, mustBeInRange(options.CloudEdgeColor,0,1)} = [0 0 0];
+    options.CloudEdgeColor (:,3) double {mustBeNumeric, mustBeInRange(options.CloudEdgeColor,0,1)} = turbo(16);
     options.Parent = []
     options.Support (1,2) double = [-inf, inf];
     options.Kernel {mustBeTextScalar, mustBeMember(options.Kernel, {'normal', 'box', 'triangle', 'epanechnikov'})} = 'normal';
@@ -65,7 +65,6 @@ end
 
 %% check all the inputs and if they do not exist then revert to default settings
 % then set/get all the inputs out of this structure
-color               = options.Color;
 density_type        = options.DensityType;
 box_on              = options.Box;
 box_dodge           = options.BoxDodge;
@@ -76,8 +75,35 @@ box_col_match       = options.MatchBoxColor;
 line_width          = options.LineWidth;
 lwr_bnd             = options.LowerBand;
 box_color           = options.BoxColor;
-cloud_edge_col      = options.CloudEdgeColor;
 band_width          = options.BandWidth;
+
+
+if isempty(options.Parent)
+    fig = figure('Name', 'Raincloud Plot v3', 'Color', 'w');
+    ax = axes(fig,'NextPlot','add','FontName','Tahoma','XColor','k','YColor','k','UserData',struct('Dataset', 0));
+    yl_orig = [0 0];
+elseif isa(options.Parent,'matlab.ui.Figure')
+    ax = findobj(options.Parent.Children,'Type','axes');
+    fig = options.Parent;
+    yl_orig = get(ax,'YLim');
+else
+    ax = options.Parent;
+    set(ax, 'NextPlot','add','FontName','Tahoma');
+    fig = ax.Parent;
+    ii = 0;
+    while (~isa(fig, 'matlab.ui.Figure')) && (ii < options.MaxNesting)
+        fig = fig.Parent;
+        ii = ii + 1;
+    end
+    yl_orig = get(ax,'YLim');
+    if ~isa(fig,'matlab.ui.Figure')
+        error("Parent axes is too nested. Increase MaxNesting option or check that Parent is correct axes.");
+    end
+end
+
+ax.UserData.Dataset = ax.UserData.Dataset + 1;
+color               = options.Color(ax.UserData.Dataset,:);
+cloud_edge_col      = options.CloudEdgeColor(ax.UserData.Dataset,:);
 
 % calculate kernel density
 switch density_type
@@ -95,33 +121,27 @@ switch density_type
         u = NaN; % not sure how to handle this with RASH yet
 end
 
-if isempty(options.Parent)
-    fig = figure('Name', 'Raincloud Plot v3', 'Color', 'w');
-    ax = axes(fig,'NextPlot','add','FontName','Tahoma','XColor','k','YColor','k');
-else
-    ax = options.Parent;
-    set(ax, 'NextPlot','add','FontName','Tahoma');
-    fig = ax.Parent;
-    ii = 0;
-    while (~isa(fig, 'matlab.ui.Figure')) && (ii < options.MaxNesting)
-        fig = fig.Parent;
-        ii = ii + 1;
-    end
-    if ~isa(fig,'matlab.ui.Figure')
-        error("Parent axes is too nested. Increase MaxNesting option or check that Parent is correct axes.");
-    end
-end
+
 
 % density plot
-h{1} = area(ax, Xi, f); 
-set(h{1}, 'FaceColor', color);
-set(h{1}, 'EdgeColor', cloud_edge_col);
-set(h{1}, 'LineWidth', line_width);
-set(h{1}, 'FaceAlpha', alpha);
+h = cell(1,7);
+h{7} = ax;
+faces = [1:numel(Xi),1];
+verts = [Xi(:),f(:)];
+tmp_fig = figure();
+tmp_ax = axes(tmp_fig,'NextPlot','add','FontName','Tahoma','XColor','k','YColor','k');
+h{1} = patch(tmp_ax, 'Faces',faces,'Vertices',verts,'EdgeColor',color,'FaceColor',cloud_edge_col,'LineWidth',line_width,'FaceAlpha',alpha); 
+yl_new = get(tmp_ax, 'YLim');
+yl_new(1) = -yl_new(2)*lwr_bnd;
+delete(tmp_fig);
+
+verts = [Xi(:),f(:)+yl_orig(2)+0.1*yl_new(2)];
+h{1} = patch(ax, 'Faces',faces,'Vertices',verts,'EdgeColor',color,'FaceColor',cloud_edge_col,'LineWidth',line_width,'FaceAlpha',alpha); 
 
 % make some space under the density plot for the boxplot and raindrops
-yl = get(ax, 'YLim');
-set(ax, 'YLim', [-yl(2)*lwr_bnd yl(2)]);
+yl = yl_new + yl_orig;
+yl(2) = yl(2) + 0.1*yl_new(2);
+set(ax, 'YLim', yl);
 
 % width of boxplot
 wdth = yl(2) * 0.25;
@@ -147,9 +167,9 @@ Y           = [quartiles whiskers];
 
 % raindrops
 if box_dodge
-    drops_pos = (jit * 0.6) - yl(2) * dot_dodge_amount;
+    drops_pos = (jit * 0.6) - (yl(2) * dot_dodge_amount + yl_orig(2));
 else
-    drops_pos = jit - yl(2) / 2;
+    drops_pos = jit - (yl(2) / 2 + yl_orig(2)/2);
 end
 
 h{2} = scatter(ax, X, drops_pos);
