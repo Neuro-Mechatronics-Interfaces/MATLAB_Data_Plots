@@ -82,7 +82,7 @@ else
     dx = seconds(round(seconds(dx).*options.XLabelScaleFactor,options.XLabelRoundingLevel)./options.XLabelScaleFactor);
     tx = sprintf('%g %s', seconds(dx) * options.XLabelScaleFactor, options.XUnits); % time scalebar text
 end
-x1 = x0 + dx;
+% x1 = x0 + dx;
 dy = abs(y1 - y0);
 if ~isduration(dy)
     dy = round(dy.*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor;
@@ -91,16 +91,20 @@ else
     dy = seconds(round(seconds(dy).*options.YLabelScaleFactor, options.YLabelRoundingLevel)./options.YLabelScaleFactor);
     ty = sprintf('%g %s', seconds(dy) * options.YLabelScaleFactor, options.YUnits); % vertical scalebar text
 end
-y1 = y0 + dy;
+% y1 = y0 + dy;
 
 if options.XBar
     h.XBar = line(ax, [x0, x1], [y0, y0], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
-    h.XText = text(ax, x0+dx/2, y0-0.05*dy, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','top','Color',options.Color,'FontSize',options.FontSize);
+    if (y1 > y0)
+        h.XText = text(ax, (x0+x1)/2, y0-dy*0.05, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','top','Color',options.Color,'FontSize',options.FontSize);
+    else
+        h.XText = text(ax, (x0+x1)/2, y0+dy*0.05, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Color',options.Color,'FontSize',options.FontSize);
+    end
     h.YBar.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 if options.YBar
     h.YBar = line(ax, [x0, x0], [y0, y1], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
-    h.YText = text(ax, x0-0.05*dx, y0+dy/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
+    h.YText = text(ax, x0-(x1-x0)*0.05, (y0+y1)/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
     h.YBar.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 end
