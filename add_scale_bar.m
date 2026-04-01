@@ -72,6 +72,8 @@ arguments
     options.FontName {mustBeTextScalar} = 'Tahoma';
     options.XLabelRoundingLevel (1,1) {mustBeInteger} = 0;
     options.YLabelRoundingLevel (1,1) {mustBeInteger} = 0;
+    options.XLabelOffsetFraction (1,1) double = 0.05; % negative will push "inside"
+    options.YLabelOffsetFraction (1,1) double = 0.05; % negative will push "inside"
 end
 % Add scalebar to plot
 dx = abs(x1 - x0);
@@ -95,16 +97,25 @@ end
 
 if options.XBar
     h.XBar = line(ax, [x0, x1], [y0, y0], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
-    if (y1 > y0)
-        h.XText = text(ax, (x0+x1)/2, y0-dy*0.05, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','top','Color',options.Color,'FontSize',options.FontSize);
+    if isdatetime(x0)
+        xMid = x0 + (x1 - x0)/2; 
     else
-        h.XText = text(ax, (x0+x1)/2, y0+dy*0.05, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Color',options.Color,'FontSize',options.FontSize);
+        xMid = (x0+x1)/2; 
+    end
+    if (y1 > y0)
+        h.XText = text(ax, xMid, y0-dy*options.XLabelOffsetFraction, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','top','Color',options.Color,'FontSize',options.FontSize);
+    else
+        h.XText = text(ax, xMid, y0+dy*options.XLabelOffsetFraction, tx, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Color',options.Color,'FontSize',options.FontSize);
     end
     h.YBar.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 if options.YBar
     h.YBar = line(ax, [x0, x0], [y0, y1], 'Color',options.Color,'LineWidth',1.25,'LineStyle','-');
-    h.YText = text(ax, x0-(x1-x0)*0.05, (y0+y1)/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
+    if (x1 > x0)
+        h.YText = text(ax, x0-(x1-x0)*options.YLabelOffsetFraction, (y0+y1)/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
+    else
+        h.YText = text(ax, x0+(x1-x0)*options.YLabelOffsetFraction, (y0+y1)/2, ty, 'FontName',options.FontName,'HorizontalAlignment','center','VerticalAlignment','bottom','Rotation',90,'Color',options.Color,'FontSize',options.FontSize);
+    end
     h.YBar.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 end
